@@ -1,0 +1,20 @@
+/*! 
+
+\mainpage VISP Wrapper for Unity  @VISP_WRAPPER_VERSION@ main page
+
+\tableofcontents
+
+\section intro_sec Introduction
+
+<p>VISP Wrapper is a set of methods exported to allow calling ViSP in Unity for example.
+<a href="http://team.inria.fr/lagadic" target="_parent">Lagadic</a> team located at <a
+href="http://www.inria.fr/en/centre/rennes" target="_parent">Inria Rennes</a>.</p>
+
+<p>VISP Wrapper source code is available on GitHub, with examples of use in Unity : <a href="https://github.org/lagadic/ustk" target="_parent">https://github.org/lagadic/ustk</a></p>
+ 
+<p>If you have any problems or find any bugs, please report them in 
+<a href="https://github.com/lagadic/visp_wrapper/issues">the bug tracker</a>. 
+
+
+*/
+

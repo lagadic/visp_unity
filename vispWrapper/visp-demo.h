@@ -1,4 +1,9 @@
-#define TESTDLL_API __declspec(dllexport)
+// On Microsoft Windows, use dllexport to tag symbols.
+# if defined(_WIN32) || defined(__CYGWIN__)
+#   define VISP_WRAPPER_EXPORT __declspec(dllexport)
+# else // On Linux
+#   define VISP_WRAPPER_EXPORT
+# endif // defined(_WIN32) || defined(__CYGWIN__)
 
 #include <visp/vpMatrix.h>
 #include <visp/vpMath.h>
@@ -10,5 +15,5 @@
 
 using namespace std;
 extern "C" {
-	TESTDLL_API double dot_prod(unsigned int* const A);
+  VISP_WRAPPER_EXPORT double dot_prod(unsigned int* const A);
 }
