@@ -5,9 +5,9 @@ using System.Runtime.InteropServices;
 
 public class demo : MonoBehaviour {
 		// Import DLL (visp-demo.dll)
-    [DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "dot_prod")]
+//    [DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "dot_prod")]
 		//Imported function dot_prod()
-    public static extern double dot_prod(uint[] vec);
+//    public static extern double dot_prod(uint[] vec);
 
 		//vectors:
 		//a = {a1, a2, a3};
@@ -17,6 +17,6 @@ public class demo : MonoBehaviour {
 
 		void Start () {
 			Debug.Log("Dot Product of the vectors is:");
-			Debug.Log(dot_prod(vec));
+//			Debug.Log(dot_prod(vec));
 		}
 }
