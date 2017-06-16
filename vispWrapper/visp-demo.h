@@ -1,13 +1,12 @@
-// On Microsoft Windows, use dllexport to tag symbols.
-# if defined(_WIN32) || defined(__CYGWIN__)
-#   define VISP_WRAPPER_EXPORT __declspec(dllexport)
-# else // On Linux
-#   define VISP_WRAPPER_EXPORT
-# endif // defined(_WIN32) || defined(__CYGWIN__)
+#define TESTDLL_API __declspec(dllexport)
 
 #include <visp/vpMatrix.h>
 #include <visp/vpMath.h>
 #include <visp/vpTranslationVector.h>
+
+#include <visp3/core/vpImage.h>
+#include <visp3/core/vpTime.h>
+#include <visp3/io/vpImageIo.h>
 
 #include <iostream>
 #include <string>
@@ -15,5 +14,6 @@
 
 using namespace std;
 extern "C" {
-  VISP_WRAPPER_EXPORT double dot_prod(unsigned int* const A);
+	TESTDLL_API double dot_prod(unsigned int* const A);
+	TESTDLL_API double displayImage(unsigned char* const bitmap, int height, int width);
 }

@@ -1,11 +1,6 @@
 #include "visp-demo.h"
-extern "C"{
-  /*!
-    Does a vector product.
-
-    \param A : Pointer on 6 doubles (2 vectors of 3 doubles to multiply).
-    \return The product result.
-  */
+extern "C" {
+	vpImage<unsigned char> image;
   double dot_prod(unsigned int* const A){
     //Defining (1 X 3) Row Vector
     vpRowVector r(3);
@@ -20,5 +15,13 @@ extern "C"{
     //Dot Product
     double product = r * c;
     return product;
+  }
+
+  double displayImage(unsigned char* const bitmap, int height, int width) {
+	  double t0 = vpTime::measureTimeMs();
+	  image.resize(height,width);
+	  image.bitmap = bitmap;
+	  vpImageIo::write(image, std::string("C:/Users/mpouliqu/Documents/test.png"));
+	  return vpTime::measureTimeMs() - t0;
   }
 }
