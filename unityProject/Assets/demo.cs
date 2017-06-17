@@ -12,9 +12,9 @@ public class demo : MonoBehaviour {
     public static extern double dot_prod(uint[] vec);
 
     // Import DLL (visp-demo.dll)
-    [DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "displayImage")]
-    //Imported function displayImage()
-    public static extern double displayImage(byte[] bitmap, int height, int width);
+    [DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "passFrame")]
+    //Imported function passFrame()
+    public static extern void passFrame(byte[] bitmap, int height, int width);
 
 
 
@@ -44,11 +44,8 @@ public class demo : MonoBehaviour {
     void Update()
     {
 
-        double time = displayImage(Color32ArrayToByteArray(webcamTexture.GetPixels32()), webcamTexture.height, webcamTexture.width);
+        passFrame(Color32ArrayToByteArray(webcamTexture.GetPixels32()), webcamTexture.height, webcamTexture.width);
 
-        Debug.Log(webcamTexture.height);
-        Debug.Log(webcamTexture.width);
-        Debug.Log(time); 
     }
 
     private static byte[] Color32ArrayToByteArray(Color32[] colors)
