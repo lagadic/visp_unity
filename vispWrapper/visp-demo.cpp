@@ -2,7 +2,6 @@
 extern "C" {
 	// Defining VpImage globally
 	vpImage<unsigned char> image;
-	unsigned char* bitmap_grey;
 
 	double dot_prod(unsigned int* const A){
 		//Defining (1 X 3) Row Vector
@@ -20,13 +19,12 @@ extern "C" {
 		return product;
 	}
 
+	// Greyscale bitmap from Unity to vpImage
 	void passFrame(unsigned char* const bitmap, int height, int width){
 		// Resize frame according to Webcam input from Unity
 		image.resize(height,width);
-		unsigned int size = unsigned(width) * unsigned(height);
 
-		// Convert frame to Grey Scale for the tracker pipeline
-		vpImageConvert::RGBaToGrey(bitmap,bitmap_grey,size);
-		image.bitmap = bitmap_grey;
+		// Grey Scale Image to be passed in the tracker pipeline
+		image.bitmap = bitmap;
 	}
 }
