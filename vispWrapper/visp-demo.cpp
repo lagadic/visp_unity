@@ -1,7 +1,14 @@
 #include "visp-demo.h"
 extern "C" {
+
 	// Defining VpImage globally
 	vpImage<unsigned char> image;
+
+	// Defining  blob
+	vpDot2 blob;
+	blob.setGraphics(true);
+	blob.setGraphicsThickness(2);
+
 
 	double dot_prod(unsigned int* const A){
 		//Defining (1 X 3) Row Vector
@@ -27,4 +34,16 @@ extern "C" {
 		// Grey Scale Image to be passed in the tracker pipeline
 		image.bitmap = bitmap;
 	}
+
+	 void initBlobTracker(int blobCenterX, int blobCenterY, bool isClicked)
+	 {
+		 vpImagePoint germ(blobCenterX, blobCenterY);
+		 if(isClicked) {
+						 blob.initTracking(image, germ);
+				}
+		}
+
+	 trackBlob(char* newBitmap, int height, int width)
+	 {
+	 }
 }
