@@ -1,14 +1,13 @@
 #include "visp-demo.h"
 extern "C" {
 
-	// Defining VpImage globally
+	// Declaring VpImage globally
 	vpImage<unsigned char> image;
 
-	// Defining  blob
+	// Declaring blob
 	vpDot2 blob;
 	blob.setGraphics(true);
 	blob.setGraphicsThickness(2);
-
 
 	double dot_prod(unsigned int* const A){
 		//Defining (1 X 3) Row Vector
@@ -35,15 +34,19 @@ extern "C" {
 		image.bitmap = bitmap;
 	}
 
-	 void initBlobTracker(int blobCenterX, int blobCenterY, bool isClicked)
-	 {
-		 vpImagePoint germ(blobCenterX, blobCenterY);
-		 if(isClicked) {
-						 blob.initTracking(image, germ);
-				}
+	void initBlobTracker(int blobCenterX, int blobCenterY, bool isClicked, bool init_done)
+	{
+		vpImagePoint germ(blobCenterX, blobCenterY);
+		if(isClicked) {
+			blob.initTracking(image, germ);
+			init_done = true;
 		}
+	}
 
-	 trackBlob(char* newBitmap, int height, int width)
-	 {
-	 }
+	void trackBlob(char* newBitmap, int height, int width)
+	{
+		blob.track(image);
+		// update newBitmap
+		// How to get the modified frame, without flush function. Are the changes done on variable image itself?
+	}
 }
