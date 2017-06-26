@@ -3,12 +3,10 @@ extern "C" {
 
 	// Declaring VpImage globally
 	vpImage<unsigned char> image;
-/*
+
 	// Declaring blob
 	vpDot2 blob;
-	blob.setGraphics(true);
-	blob.setGraphicsThickness(2);
-*/
+
 	double dot_prod(unsigned int* const A){
 		//Defining (1 X 3) Row Vector
 		vpRowVector r(3);
@@ -34,48 +32,27 @@ extern "C" {
 		image.bitmap = bitmap;
 	}
 
-	void BlobTracker(unsigned char* const bitmap, int height, int width, int blobCenterX, int blobCenterY, bool isClicked, bool init_done, double cogX, double cogY)
+	void initBlobTracker(int getMouseX, int getMouseY, bool isClicked, bool init_done)
 	{
-		// Declaring VpImage
-		vpImage<unsigned char> img;
-
-		// Resize frame according to Webcam input from Unity
-		img.resize(height,width);
-
-		// Grey Scale Image to be passed in the tracker pipeline
-		img.bitmap = bitmap;
-
-		// Declaring blob
-		vpDot2 blob;
 		blob.setGraphics(true);
 		blob.setGraphicsThickness(2);
-		// Define Blob center as a vpImagePoint
-		vpImagePoint germ(blobCenterX, blobCenterY);
 
-		if(!init_done)
-		{
-			if(isClicked) {
-				blob.initTracking(img, germ);
-				init_done = true;
-				cogX = blobCenterX;
-				cogY = blobCenterY;
-			}
+		// Define Blob initial tracking pixel as a vpImagePoint
+		vpImagePoint germ(getMouseX, getMouseY);
+
+		//Initialize blob pixel
+		if(isClicked) {
+			blob.initTracking(img, germ);
+			init_done = true;
 		}
-		else
-		{
-			blob.track(img);
-			vpImagePoint cog = d.getCog();
-			cogX = cog.get_i;
-			cogY = cog.get_j;
-		}
+
 	}
-}
-	/*
-	void getBlobCoordinates(char* newBitmap, int height, int width)
+
+	void getBlobCoordinates(double cogX, double cogY)
 	{
 		blob.track(image);
 		vpImagePoint cog = d.getCog();
-		// update newBitmap
-		// How to get the modified frame, without flush function. Are the changes done on variable image itself?
+		cogX = cog.get_i;
+		cogY = cog.get_j;
 	}
-	*/
+}
