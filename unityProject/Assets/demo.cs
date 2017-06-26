@@ -32,7 +32,12 @@ public class demo : MonoBehaviour {
     public bool init_done;
     public double cogX;
     public double cogY;
-
+    public int SceneWidth;
+    public int SceneHeight;
+    public int WebCamWidth;
+    public int WebCamHeight;
+    public int cutoffX;
+    public int cutoffY;
     //vectors:
     //a = {a1, a2, a3};
     //b = {b1, b2, b3};
@@ -41,6 +46,13 @@ public class demo : MonoBehaviour {
 
     void Start()
     {
+        isClicked = false;
+        init_done = false;
+
+        // Initialize cogX, cogY [center of gravity]
+        cogX = 0;
+        cogY = 0;
+
         webcamTexture = new WebCamTexture();
         Renderer renderer = GetComponent<Renderer>();
         renderer.material.mainTexture = webcamTexture;
@@ -51,13 +63,23 @@ public class demo : MonoBehaviour {
         Debug.Log("Dot Product of the vectors is:");
         Debug.Log(dot_prod(vec));
 
-        //
-        isClicked = false;
-        init_done = false;
+        Debug.Log("Cam width");
+        Debug.Log(webcamTexture.width);
+        Debug.Log("Cam height");
+        Debug.Log(webcamTexture.height);
 
-        // Initialize cogX, cogY [center of gravity]
-        cogX = 0;
-        cogY = 0;
+        Debug.Log("Window width");
+        Debug.Log(Screen.width);
+        Debug.Log("Window height");
+        Debug.Log(Screen.height);
+
+        SceneWidth = Screen.width;
+        WebCamWidth = webcamTexture.width;
+
+        SceneHeight = Screen.height;
+        WebCamHeight = webcamTexture.height;
+
+        cutoffX = (SceneWidth - WebCamWidth) / 2;
     }
 
     void Update()
@@ -65,6 +87,12 @@ public class demo : MonoBehaviour {
         // ##############################################################################
         // ### Get the coordinates getMouseX and getMouseY from the scene as doubles. ###
         // ##############################################################################
+        if (Input.GetMouseButtonDown(0))
+        {
+            Debug.Log("Pressed left click.");
+            getMouseX = Input.mousePosition[0] - cutoffX;
+            getMouseY = WebCamHeight - Debug.Log(Input.mousePosition[1]);
+        }
 
         passFrame(Color32ArrayToByteArray(webcamTexture.GetPixels32()), webcamTexture.height, webcamTexture.width);
         if(!init_done)
