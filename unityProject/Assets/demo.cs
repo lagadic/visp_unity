@@ -90,8 +90,10 @@ public class demo : MonoBehaviour {
         if (Input.GetMouseButtonDown(0))
         {
             Debug.Log("Pressed left click.");
-            getMouseX = Input.mousePosition[0] - cutoffX;
-            getMouseY = WebCamHeight - Debug.Log(Input.mousePosition[1]);
+            //getMouseX = Input.mousePosition[0] - cutoffX;
+            //getMouseY = WebCamHeight - Debug.Log(Input.mousePosition[1]);
+            getMouseX = 50;
+            getMouseY = 50;
         }
 
         passFrame(Color32ArrayToByteArray(webcamTexture.GetPixels32()), webcamTexture.height, webcamTexture.width);

@@ -32,27 +32,27 @@ extern "C" {
 		image.bitmap = bitmap;
 	}
 
-	void initBlobTracker(int getMouseX, int getMouseY, bool isClicked, bool init_done)
+	void initBlobTracker(double getMouseX, double getMouseY, bool isClicked, bool init_done)
 	{
 		blob.setGraphics(true);
 		blob.setGraphicsThickness(2);
 
 		// Define Blob initial tracking pixel as a vpImagePoint
-		vpImagePoint germ(getMouseX, getMouseY);
+		vpImagePoint germ;
+		germ.set_ij(getMouseX, getMouseY);
 
 		//Initialize blob pixel
 		if(isClicked) {
-			blob.initTracking(img, germ);
+			blob.initTracking(image, germ);
 			init_done = true;
 		}
-
 	}
 
 	void getBlobCoordinates(double cogX, double cogY)
 	{
 		blob.track(image);
-		vpImagePoint cog = d.getCog();
-		cogX = cog.get_i;
-		cogY = cog.get_j;
+		vpImagePoint cog = blob.getCog();
+		cogX = cog.get_i();
+		cogY = cog.get_j();
 	}
 }
