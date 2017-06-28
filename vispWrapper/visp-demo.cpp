@@ -48,11 +48,11 @@ extern "C" {
 		}
 	}
 
-	void getBlobCoordinates(double cogX, double cogY)
+	void getBlobCoordinates(double* cogX, double* cogY)
 	{
 		blob.track(image);
 		vpImagePoint cog = blob.getCog();
-		cogX = cog.get_i();
-		cogY = cog.get_j();
+		cogX[0] = cog.get_i();
+		cogY[0] = cog.get_j();
 	}
 }

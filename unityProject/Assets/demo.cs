@@ -24,20 +24,22 @@ public class demo : MonoBehaviour {
     // Import DLL (visp-demo.dll)
     [DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "getBlobCoordinates")]
     //Imported function getBlobCoordinates()
-    public static extern void getBlobCoordinates(double cogX, double cogY);
+    public static extern void getBlobCoordinates(double[] cogX, double[] cogY);
 
     public WebCamTexture webcamTexture;
     public Color32[] data;
     public bool isClicked;
     public bool init_done;
-    public double cogX;
-    public double cogY;
+    public double[] cogX;
+    public double[] cogY;
     public int SceneWidth;
     public int SceneHeight;
     public int WebCamWidth;
     public int WebCamHeight;
     public int cutoffX;
     public int cutoffY;
+    public double getMouseX;
+    public double getMouseY;
     //vectors:
     //a = {a1, a2, a3};
     //b = {b1, b2, b3};
@@ -50,8 +52,8 @@ public class demo : MonoBehaviour {
         init_done = false;
 
         // Initialize cogX, cogY [center of gravity]
-        cogX = 0;
-        cogY = 0;
+        cogX = new double[1];
+        cogY = new double[1];
 
         webcamTexture = new WebCamTexture();
         Renderer renderer = GetComponent<Renderer>();
@@ -92,20 +94,21 @@ public class demo : MonoBehaviour {
             Debug.Log("Pressed left click.");
             //getMouseX = Input.mousePosition[0] - cutoffX;
             //getMouseY = WebCamHeight - Debug.Log(Input.mousePosition[1]);
-            getMouseX = 50;
-            getMouseY = 50;
-        }
+	      }
+
+        getMouseX = 50;
+        getMouseY = 50;
 
         passFrame(Color32ArrayToByteArray(webcamTexture.GetPixels32()), webcamTexture.height, webcamTexture.width);
         if(!init_done)
     		{
-          initBlobTracker(int getMouseX, int getMouseY, bool isClicked, bool init_done);
+          initBlobTracker(getMouseX, getMouseY, isClicked, init_done);
         }
         else
         {
-          getBlobCoordinates(double cogX, double cogY)
-          Debug.Log(cogX);
-          Debug.Log(cogY);
+          getBlobCoordinates(cogX, cogY);
+          Debug.Log(cogX[0]);
+          Debug.Log(cogY[0]);
         }
     }
 
