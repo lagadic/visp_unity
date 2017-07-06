@@ -19,7 +19,7 @@ public class demo : MonoBehaviour {
     // Import DLL (visp-demo.dll)
     [DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "initBlobTracker")]
     //Imported function initBlobTracker()
-    public static extern void initBlobTracker(int getMouseX, int getMouseY, bool isClicked, bool init_done);
+    public static extern void initBlobTracker(double getMouseX, double getMouseY, uint[] init_done);
 
     // Import DLL (visp-demo.dll)
     [DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "getBlobCoordinates")]
@@ -28,8 +28,8 @@ public class demo : MonoBehaviour {
 
     public WebCamTexture webcamTexture;
     public Color32[] data;
-    public bool isClicked;
-    public bool init_done;
+//    public bool[] isClicked;
+    public uint[] init_done;
     public double[] cogX;
     public double[] cogY;
     public int SceneWidth;
@@ -44,12 +44,14 @@ public class demo : MonoBehaviour {
     //a = {a1, a2, a3};
     //b = {b1, b2, b3};
 
-    private uint[] vec = {1,2,3,1,2,3};
+    public uint[] vec;
 
     void Start()
     {
-        isClicked = false;
-        init_done = false;
+        //isClicked = new bool[1];
+        //isClicked[0] = true;
+        init_done = new uint[1];
+        init_done[0] = 0;
 
         // Initialize cogX, cogY [center of gravity]
         cogX = new double[1];
@@ -61,7 +63,13 @@ public class demo : MonoBehaviour {
         data = new Color32[webcamTexture.width * webcamTexture.height];
         webcamTexture.Play();
 
-        uint[] vec = { 1, 2, 3, 1, 2, 3 };
+        vec = new uint[6];
+        vec[0] =  1;
+        vec[1] =  2;
+        vec[2] =  3;
+        vec[3] =  1;
+        vec[4] =  2;
+        vec[5] =  3;
         Debug.Log("Dot Product of the vectors is:");
         Debug.Log(dot_prod(vec));
 
@@ -92,23 +100,26 @@ public class demo : MonoBehaviour {
         if (Input.GetMouseButtonDown(0))
         {
             Debug.Log("Pressed left click.");
+            //Debug.Log(init_done[0]);
             //getMouseX = Input.mousePosition[0] - cutoffX;
             //getMouseY = WebCamHeight - Debug.Log(Input.mousePosition[1]);
 	      }
 
-        getMouseX = 50;
-        getMouseY = 50;
-
+        getMouseX = WebCamHeight/ 2;
+        getMouseY = WebCamWidth/ 2;
+        Debug.Log(vec[5]);
         passFrame(Color32ArrayToByteArray(webcamTexture.GetPixels32()), webcamTexture.height, webcamTexture.width);
-        if(!init_done)
+        if(init_done[0] == 0)
     		{
-          initBlobTracker(getMouseX, getMouseY, isClicked, init_done);
+          Debug.Log(init_done[0]);
+          initBlobTracker(getMouseX, getMouseY, init_done);
         }
         else
         {
+          Debug.Log(init_done[0]);
           getBlobCoordinates(cogX, cogY);
-          Debug.Log(cogX[0]);
-          Debug.Log(cogY[0]);
+          //Debug.Log(cogX[0]);
+          //Debug.Log(cogY[0]);
         }
     }
 

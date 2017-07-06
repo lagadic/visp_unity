@@ -7,6 +7,11 @@ extern "C" {
 	// Declaring blob
 	vpDot2 blob;
 
+	// Declaring
+	vpImagePoint germ;
+
+	// Declaring
+	vpImagePoint cog;
 	double dot_prod(unsigned int* const A){
 		//Defining (1 X 3) Row Vector
 		vpRowVector r(3);
@@ -18,6 +23,8 @@ extern "C" {
 		c[0] = A[3];
 		c[1] = A[4];
 		c[2] = A[5];
+
+		A[5] = 991;
 		//Dot Product
 		double product = r * c;
 		return product;
@@ -32,27 +39,22 @@ extern "C" {
 		image.bitmap = bitmap;
 	}
 
-	void initBlobTracker(double getMouseX, double getMouseY, bool isClicked, bool init_done)
+	void initBlobTracker(double getMouseX, double getMouseY, unsigned int* const init_done)
 	{
-		blob.setGraphics(true);
-		blob.setGraphicsThickness(2);
-
 		// Define Blob initial tracking pixel as a vpImagePoint
-		vpImagePoint germ;
 		germ.set_ij(getMouseX, getMouseY);
 
-		//Initialize blob pixel
-		if(isClicked) {
-			blob.initTracking(image, germ);
-			init_done = true;
-		}
+		//Initialize blob pixels
+		blob.initTracking(image, germ);
+		init_done[0] = 1;
 	}
 
 	void getBlobCoordinates(double* cogX, double* cogY)
 	{
 		blob.track(image);
-		vpImagePoint cog = blob.getCog();
-		cogX[0] = cog.get_i();
-		cogY[0] = cog.get_j();
+		//vpImagePoint cog = blob.getCog();
+		//cogX[0] = cog.get_i();
+		//cogY[0] = cog.get_j();
+		//return;
 	}
 }
