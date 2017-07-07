@@ -17,5 +17,5 @@ extern "C" {
 	VISP_EXPORT double dot_prod(unsigned int* const A);
 	VISP_EXPORT void passFrame(unsigned char* const bitmap, int height, int width);
 	VISP_EXPORT void initBlobTracker(double getMouseX, double getMouseY, unsigned int* const init_done);
-	VISP_EXPORT void getBlobCoordinates(double* cogX, double* cogY);
+	VISP_EXPORT void getBlobCoordinates(double* cogX, double* cogY, unsigned int* const init_done);
 }

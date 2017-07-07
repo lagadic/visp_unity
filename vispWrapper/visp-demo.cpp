@@ -49,12 +49,16 @@ extern "C" {
 		init_done[0] = 1;
 	}
 
-	void getBlobCoordinates(double* cogX, double* cogY)
+	void getBlobCoordinates(double* cogX, double* cogY, unsigned int* const init_done)
 	{
-		blob.track(image);
-		//vpImagePoint cog = blob.getCog();
-		//cogX[0] = cog.get_i();
-		//cogY[0] = cog.get_j();
-		//return;
+		try {
+			blob.track(image);
+			vpImagePoint cog = blob.getCog();
+			cogX[0] = cog.get_i();
+			cogY[0] = cog.get_j();
+		}
+		catch(...) {
+			*init_done = 0;
+		}
 	}
 }

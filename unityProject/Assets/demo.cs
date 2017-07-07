@@ -24,7 +24,7 @@ public class demo : MonoBehaviour {
     // Import DLL (visp-demo.dll)
     [DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "getBlobCoordinates")]
     //Imported function getBlobCoordinates()
-    public static extern void getBlobCoordinates(double[] cogX, double[] cogY);
+    public static extern void getBlobCoordinates(double[] cogX, double[] cogY, uint[] init_done);
 
     public WebCamTexture webcamTexture;
     public Color32[] data;
@@ -116,10 +116,10 @@ public class demo : MonoBehaviour {
         }
         else
         {
-          Debug.Log(init_done[0]);
-          getBlobCoordinates(cogX, cogY);
-          //Debug.Log(cogX[0]);
-          //Debug.Log(cogY[0]);
+          Debug.Log("tracking");
+          getBlobCoordinates(cogX, cogY, init_done);
+          Debug.Log(cogX[0]);
+          Debug.Log(cogY[0]);
         }
     }
 
