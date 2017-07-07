@@ -28,7 +28,6 @@ public class demo : MonoBehaviour {
 
     public WebCamTexture webcamTexture;
     public Color32[] data;
-//    public bool[] isClicked;
     public uint[] init_done;
     public double[] cogX;
     public double[] cogY;
@@ -40,16 +39,13 @@ public class demo : MonoBehaviour {
     public int cutoffY;
     public double getMouseX;
     public double getMouseY;
+    public uint[] vec;
     //vectors:
     //a = {a1, a2, a3};
     //b = {b1, b2, b3};
 
-    public uint[] vec;
-
     void Start()
     {
-        //isClicked = new bool[1];
-        //isClicked[0] = true;
         init_done = new uint[1];
         init_done[0] = 0;
 
@@ -88,8 +84,6 @@ public class demo : MonoBehaviour {
 
         SceneHeight = Screen.height;
         WebCamHeight = webcamTexture.height;
-
-        cutoffX = (SceneWidth - WebCamWidth) / 2;
     }
 
     void Update()
@@ -100,23 +94,23 @@ public class demo : MonoBehaviour {
         if (Input.GetMouseButtonDown(0))
         {
             Debug.Log("Pressed left click.");
-            //Debug.Log(init_done[0]);
-            //getMouseX = Input.mousePosition[0] - cutoffX;
-            //getMouseY = WebCamHeight - Debug.Log(Input.mousePosition[1]);
 	      }
 
         getMouseX = WebCamHeight/ 2;
         getMouseY = WebCamWidth/ 2;
-        Debug.Log(vec[5]);
+
+        // Pass the current frame
         passFrame(Color32ArrayToByteArray(webcamTexture.GetPixels32()), webcamTexture.height, webcamTexture.width);
+
         if(init_done[0] == 0)
     		{
+          Debug.Log("Initiallizing");
           Debug.Log(init_done[0]);
           initBlobTracker(getMouseX, getMouseY, init_done);
         }
         else
         {
-          Debug.Log("tracking");
+          Debug.Log("Tracking");
           getBlobCoordinates(cogX, cogY, init_done);
           Debug.Log(cogX[0]);
           Debug.Log(cogY[0]);

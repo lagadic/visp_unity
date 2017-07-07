@@ -1,17 +1,18 @@
 #include "visp-demo.h"
 extern "C" {
 
-	// Declaring VpImage globally
+	// Declaring VpImage
 	vpImage<unsigned char> image;
 
 	// Declaring blob
 	vpDot2 blob;
 
-	// Declaring
+	// Declaring initiallizing pixel
 	vpImagePoint germ;
 
-	// Declaring
+	// Declaring Center of Gravity
 	vpImagePoint cog;
+
 	double dot_prod(unsigned int* const A){
 		//Defining (1 X 3) Row Vector
 		vpRowVector r(3);
@@ -24,7 +25,6 @@ extern "C" {
 		c[1] = A[4];
 		c[2] = A[5];
 
-		A[5] = 991;
 		//Dot Product
 		double product = r * c;
 		return product;
@@ -53,6 +53,7 @@ extern "C" {
 	{
 		try {
 			blob.track(image);
+			// Get the Center of Gravity of the tracked blob
 			vpImagePoint cog = blob.getCog();
 			cogX[0] = cog.get_i();
 			cogY[0] = cog.get_j();
