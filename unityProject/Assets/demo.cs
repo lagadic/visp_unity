@@ -22,13 +22,35 @@ public class demo : MonoBehaviour {
     public static extern void initBlobTracker(double getMouseX, double getMouseY, uint[] init_done);
 
     // Import DLL (visp-demo.dll)
+    [DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "trackBlob")]
+    //Imported function trackBlob()
+    public static extern void trackBlob();
+
+    // Import DLL (visp-demo.dll)
     [DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "getBlobCoordinates")]
     //Imported function getBlobCoordinates()
     public static extern void getBlobCoordinates(double[] cogX, double[] cogY, uint[] init_done);
 
+    // Import DLL (visp-demo.dll)
+    [DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "getNumberOfBlobs")]
+    //Imported function getNumberOfBlobs()
+    public static extern int getNumberOfBlobs();
+
+    // Import DLL (visp-demo.dll)
+    [DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "computePose")]
+    //Imported function computePose()
+    public static extern void computePose(unsigned int* const init_pose);
+
+    // Import DLL (visp-demo.dll)
+    [DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "initFourBlobTracker")]
+    //Imported function initFourBlobTracker()
+    public static extern void initFourBlobTracker(unsigned int* const init_pose);
+
     public WebCamTexture webcamTexture;
     public Color32[] data;
+//    public bool[] isClicked;
     public uint[] init_done;
+    public uint[] init_pose;
     public double[] cogX;
     public double[] cogY;
     public int SceneWidth;
@@ -37,15 +59,20 @@ public class demo : MonoBehaviour {
     public int WebCamHeight;
     public int cutoffX;
     public int cutoffY;
+    public int numOfBlobs;
     public double getMouseX;
     public double getMouseY;
-    public uint[] vec;
+
     //vectors:
     //a = {a1, a2, a3};
     //b = {b1, b2, b3};
 
+    public uint[] vec;
+
     void Start()
     {
+        //isClicked = new bool[1];
+        //isClicked[0] = true;
         init_done = new uint[1];
         init_done[0] = 0;
 
@@ -69,6 +96,9 @@ public class demo : MonoBehaviour {
         Debug.Log("Dot Product of the vectors is:");
         Debug.Log(dot_prod(vec));
 
+        initFourBlobTracker(init_pose);
+        trackBlob();
+/*
         Debug.Log("Cam width");
         Debug.Log(webcamTexture.width);
         Debug.Log("Cam height");
@@ -78,12 +108,14 @@ public class demo : MonoBehaviour {
         Debug.Log(Screen.width);
         Debug.Log("Window height");
         Debug.Log(Screen.height);
-
+*/
         SceneWidth = Screen.width;
         WebCamWidth = webcamTexture.width;
 
         SceneHeight = Screen.height;
         WebCamHeight = webcamTexture.height;
+
+        cutoffX = (SceneWidth - WebCamWidth) / 2;
     }
 
     void Update()
@@ -94,26 +126,37 @@ public class demo : MonoBehaviour {
         if (Input.GetMouseButtonDown(0))
         {
             Debug.Log("Pressed left click.");
+            Debug.Log(Input.mousePosition[0]);
+            Debug.Log(Input.mousePosition[1]);
+            //getMouseX = Input.mousePosition[0] - cutoffX;
+            //getMouseY = WebCamHeight - Debug.Log(Input.mousePosition[1]);
 	      }
 
-        getMouseX = WebCamHeight/ 2;
-        getMouseY = WebCamWidth/ 2;
-
-        // Pass the current frame
+        getMouseX = 1;
+        getMouseY = 1;
+        //Debug.Log(vec[5]);
         passFrame(Color32ArrayToByteArray(webcamTexture.GetPixels32()), webcamTexture.height, webcamTexture.width);
-
         if(init_done[0] == 0)
     		{
-          Debug.Log("Initiallizing");
-          Debug.Log(init_done[0]);
+          //Debug.Log(init_done[0]);
           initBlobTracker(getMouseX, getMouseY, init_done);
         }
         else
         {
-          Debug.Log("Tracking");
+          Debug.Log("tracking");
+          trackBlob();
           getBlobCoordinates(cogX, cogY, init_done);
           Debug.Log(cogX[0]);
           Debug.Log(cogY[0]);
+        }
+
+        numOfBlobs = getNumberOfBlobs();
+        if (numOfBlobs == 4) {
+          computePose(init_pose);
+          init_pose[0] = 0;
+        }
+        else {
+          init_pose[0] = 1;
         }
     }
 
