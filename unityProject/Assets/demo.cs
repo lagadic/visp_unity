@@ -37,9 +37,9 @@ public class demo : MonoBehaviour {
     public static extern int getNumberOfBlobs();
 
     // Import DLL (visp-demo.dll)
-    [DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "computePose")]
+    [DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "estimatePose")]
     //Imported function computePose()
-    public static extern void computePose(unsigned int* const init_pose);
+    public static extern void estimatePose(unsigned int* const init_pose);
 
     // Import DLL (visp-demo.dll)
     [DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "initFourBlobTracker")]

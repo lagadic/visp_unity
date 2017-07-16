@@ -13,19 +13,10 @@ extern "C" {
 	// Declaring Center of Gravity
 	vpImagePoint cog;
 
-	//
 	vector<vpPoint> point;
-
-	//
-	vpHomogeneousMatrix cMo;
-
-	//
+  vpHomogeneousMatrix cMo;
 	list<vpDot2> blob_list;
-
-	//
 	vpCameraParameters cam;
-
-	//
   vpPose pose;
 
 	double dot_prod(unsigned int* const A){
@@ -86,8 +77,8 @@ extern "C" {
 	{
 		if (0) { // code used to learn the characteristics of a blob that we want to retrieve automatically
       // Learn the characteristics of the blob to auto detect
-      blob.initTracking(I);
-      blob.track(I);
+      blob.initTracking(image);
+      blob.track(image);
     }
 		// Set blob characteristics for the auto detection
 
@@ -115,12 +106,12 @@ extern "C" {
 
 		// Make a seprate track function that takes a list of blobs into consideration.
 		for(std::list<vpDot2>::iterator it=blob_list.begin(); it != blob_list.end(); ++it) {
-			(*it).track(I);
+			(*it).track(image);
 		}
 		return blob_list.size();
 	}
 
-	void computePose(unsigned int* const init_pose)
+	void estimatePose(unsigned int* const init_pose)
 	{
 	  double x=0, y=0;
 	  unsigned int i = 0;
