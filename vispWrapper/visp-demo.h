@@ -7,6 +7,8 @@
 #include <visp3/core/vpImageConvert.h>
 #include <visp3/blob/vpDot2.h>
 #include <visp3/core/vpImagePoint.h>
+#include <visp3/core/vpPixelMeterConversion.h>
+#include <visp3/vision/vpPose.h>
 
 #include <iostream>
 #include <string>
@@ -18,4 +20,8 @@ extern "C" {
 	VISP_EXPORT void passFrame(unsigned char* const bitmap, int height, int width);
 	VISP_EXPORT void initBlobTracker(double getMouseX, double getMouseY, unsigned int* const init_done);
 	VISP_EXPORT void getBlobCoordinates(double* cogX, double* cogY, unsigned int* const init_done);
+	VISP_EXPORT void trackBlob();
+	VISP_EXPORT void computePose(unsigned int* const init_pose);
+	VISP_EXPORT int getNumberOfBlobs();
+	VISP_EXPORT void computePose(unsigned int* const init_pose);
 }

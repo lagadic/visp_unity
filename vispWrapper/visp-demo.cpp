@@ -13,6 +13,21 @@ extern "C" {
 	// Declaring Center of Gravity
 	vpImagePoint cog;
 
+	//
+	vector<vpPoint> point;
+
+	//
+	vpHomogeneousMatrix cMo;
+
+	//
+	list<vpDot2> blob_list;
+
+	//
+	vpCameraParameters cam;
+
+	//
+  vpPose pose;
+
 	double dot_prod(unsigned int* const A){
 		//Defining (1 X 3) Row Vector
 		vpRowVector r(3);
@@ -49,10 +64,14 @@ extern "C" {
 		init_done[0] = 1;
 	}
 
+	void trackBlob()
+	{
+		blob.track(image);
+	}
+
 	void getBlobCoordinates(double* cogX, double* cogY, unsigned int* const init_done)
 	{
 		try {
-			blob.track(image);
 			// Get the Center of Gravity of the tracked blob
 			vpImagePoint cog = blob.getCog();
 			cogX[0] = cog.get_i();
@@ -62,4 +81,70 @@ extern "C" {
 			*init_done = 0;
 		}
 	}
+
+	void initFourBlobTracker(unsigned int* const init_pose)
+	{
+		if (0) { // code used to learn the characteristics of a blob that we want to retrieve automatically
+      // Learn the characteristics of the blob to auto detect
+      blob.initTracking(I);
+      blob.track(I);
+    }
+		// Set blob characteristics for the auto detection
+
+		blob.setWidth(40);
+    blob.setHeight(40);
+    blob.setArea(1000);
+    blob.setGrayLevelMin(0);
+    blob.setGrayLevelMax(150);
+    blob.setSizePrecision(0.65);
+    blob.setEllipsoidShapePrecision(0.65);
+
+		// Define the 3D model of a target defined by 4 blobs arranged as a square
+		point.push_back( vpPoint(-0.06, -0.06, 0) );
+    point.push_back( vpPoint( 0.06, -0.06, 0) );
+    point.push_back( vpPoint( 0.06,  0.06, 0) );
+    point.push_back( vpPoint(-0.06,  0.06, 0) );
+
+		cam.initPersProjWithoutDistortion(840, 840, image.getWidth()/2, image.getHeight()/2);
+		init_pose[0] = 1;
+	}
+
+	int getNumberOfBlobs()
+	{
+		blob.searchDotsInArea(image, 0, 0, image.getWidth(), image.getHeight(), blob_list);
+
+		// Make a seprate track function that takes a list of blobs into consideration.
+		for(std::list<vpDot2>::iterator it=blob_list.begin(); it != blob_list.end(); ++it) {
+			(*it).track(I);
+		}
+		return blob_list.size();
+	}
+
+	void computePose(unsigned int* const init_pose)
+	{
+	  double x=0, y=0;
+	  unsigned int i = 0;
+	  for (std::list<vpDot2>::const_iterator it=blob_list.begin(); it != blob_list.end(); ++it) {
+	    vpPixelMeterConversion::convertPoint(cam, (*it).getCog(), x, y);
+	    point[i].set_x(x);
+	    point[i].set_y(y);
+	    pose.addPoint(point[i]);
+	    i++;
+	  }
+
+	  if (init_pose[0] == 1) {
+	    vpHomogeneousMatrix cMo_dem;
+	    vpHomogeneousMatrix cMo_lag;
+	    pose.computePose(vpPose::DEMENTHON, cMo_dem);
+	    pose.computePose(vpPose::LAGRANGE, cMo_lag);
+	    double residual_dem = pose.computeResidual(cMo_dem);
+	    double residual_lag = pose.computeResidual(cMo_lag);
+	    if (residual_dem < residual_lag)
+	      cMo = cMo_dem;
+	    else
+	      cMo = cMo_lag;
+	  }
+	  pose.computePose(vpPose::VIRTUAL_VS, cMo);
+	}
+
 }
