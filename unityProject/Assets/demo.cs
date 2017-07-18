@@ -34,7 +34,7 @@ public class demo : MonoBehaviour {
     // Import DLL (visp-demo.dll)
     [DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "getNumberOfBlobs")]
     //Imported function getNumberOfBlobs()
-    public static extern int getNumberOfBlobs();
+    public static extern void getNumberOfBlobs(uint[] numOfBlobs);
 
     // Import DLL (visp-demo.dll)
     [DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "estimatePose")]
@@ -49,6 +49,7 @@ public class demo : MonoBehaviour {
     public WebCamTexture webcamTexture;
     public Color32[] data;
 //    public bool[] isClicked;
+    public uint[] numOfBlobs;
     public uint[] init_done;
     public uint[] init_pose;
     public double[] cogX;
@@ -59,7 +60,6 @@ public class demo : MonoBehaviour {
     public int WebCamHeight;
     public int cutoffX;
     public int cutoffY;
-    public int numOfBlobs;
     public double getMouseX;
     public double getMouseY;
 
@@ -75,6 +75,11 @@ public class demo : MonoBehaviour {
         //isClicked[0] = true;
         init_done = new uint[1];
         init_done[0] = 0;
+
+        init_pose = new uint[1];
+        init_pose[0] = 0;
+
+        numOfBlobs = new uint[1];
 
         // Initialize cogX, cogY [center of gravity]
         cogX = new double[1];
@@ -136,7 +141,7 @@ public class demo : MonoBehaviour {
         getMouseY = 1;
         //Debug.Log(vec[5]);
         passFrame(Color32ArrayToByteArray(webcamTexture.GetPixels32()), webcamTexture.height, webcamTexture.width);
-        if(init_done[0] == 0)
+/*        if(init_done[0] == 0)
     		{
           //Debug.Log(init_done[0]);
           initBlobTracker(getMouseX, getMouseY, init_done);
@@ -149,9 +154,11 @@ public class demo : MonoBehaviour {
           Debug.Log(cogX[0]);
           Debug.Log(cogY[0]);
         }
-
-        numOfBlobs = getNumberOfBlobs();
-        if (numOfBlobs == 4) {
+*/
+        getNumberOfBlobs(numOfBlobs);
+        Debug.Log("Number Of blobs");
+        Debug.Log(numOfBlobs[0]);
+        if (numOfBlobs[0] == 4) {
           estimatePose(init_pose);
           init_pose[0] = 0;
         }

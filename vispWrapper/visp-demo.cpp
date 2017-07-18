@@ -100,7 +100,7 @@ extern "C" {
 		init_pose[0] = 1;
 	}
 
-	int getNumberOfBlobs()
+	void getNumberOfBlobs(unsigned int* const numOfBlobs)
 	{
 		blob.searchDotsInArea(image, 0, 0, image.getWidth(), image.getHeight(), blob_list);
 
@@ -108,7 +108,7 @@ extern "C" {
 		for(std::list<vpDot2>::iterator it=blob_list.begin(); it != blob_list.end(); ++it) {
 			(*it).track(image);
 		}
-		return blob_list.size();
+		numOfBlobs[0] = blob_list.size();
 	}
 
 	void estimatePose(unsigned int* const init_pose)
