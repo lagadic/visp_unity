@@ -38,13 +38,13 @@ public class demo : MonoBehaviour {
 
     // Import DLL (visp-demo.dll)
     [DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "estimatePose")]
-    //Imported function computePose()
-    public static extern void estimatePose(unsigned int* const init_pose);
+    //Imported function estimatePose()
+    public static extern void estimatePose(uint[] init_pose);
 
     // Import DLL (visp-demo.dll)
     [DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "initFourBlobTracker")]
     //Imported function initFourBlobTracker()
-    public static extern void initFourBlobTracker(unsigned int* const init_pose);
+    public static extern void initFourBlobTracker(uint[] init_pose);
 
     public WebCamTexture webcamTexture;
     public Color32[] data;
@@ -152,7 +152,7 @@ public class demo : MonoBehaviour {
 
         numOfBlobs = getNumberOfBlobs();
         if (numOfBlobs == 4) {
-          computePose(init_pose);
+          estimatePose(init_pose);
           init_pose[0] = 0;
         }
         else {
