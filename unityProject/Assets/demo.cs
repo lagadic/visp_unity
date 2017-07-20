@@ -101,8 +101,9 @@ public class demo : MonoBehaviour {
         Debug.Log("Dot Product of the vectors is:");
         Debug.Log(dot_prod(vec));
 
+        passFrame(Color32ArrayToByteArray(webcamTexture.GetPixels32()), webcamTexture.height, webcamTexture.width);
         initFourBlobTracker(init_pose);
-        trackBlob();
+        //trackBlob();
 /*
         Debug.Log("Cam width");
         Debug.Log(webcamTexture.width);
@@ -139,8 +140,8 @@ public class demo : MonoBehaviour {
 
         getMouseX = 1;
         getMouseY = 1;
-        //Debug.Log(vec[5]);
         passFrame(Color32ArrayToByteArray(webcamTexture.GetPixels32()), webcamTexture.height, webcamTexture.width);
+        
 /*        if(init_done[0] == 0)
     		{
           //Debug.Log(init_done[0]);
@@ -158,6 +159,7 @@ public class demo : MonoBehaviour {
         getNumberOfBlobs(numOfBlobs);
         Debug.Log("Number Of blobs");
         Debug.Log(numOfBlobs[0]);
+
         if (numOfBlobs[0] == 4) {
           estimatePose(init_pose);
           init_pose[0] = 0;

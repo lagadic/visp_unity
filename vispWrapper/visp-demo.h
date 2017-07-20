@@ -24,4 +24,5 @@ extern "C" {
 	VISP_EXPORT void estimatePose(unsigned int* const init_pose);
 	VISP_EXPORT void getNumberOfBlobs(unsigned int* const numOfBlobs);
 	VISP_EXPORT void computePose(unsigned int* const init_pose);
+	VISP_EXPORT void initFourBlobTracker(unsigned int* const init_pose);
 }

@@ -75,7 +75,8 @@ extern "C" {
 
 	void initFourBlobTracker(unsigned int* const init_pose)
 	{
-		if (0) { // code used to learn the characteristics of a blob that we want to retrieve automatically
+		if (0) {
+			// code used to learn the characteristics of a blob that we want to retrieve automatically
       // Learn the characteristics of the blob to auto detect
       blob.initTracking(image);
       blob.track(image);
@@ -137,5 +138,4 @@ extern "C" {
 	  }
 	  pose.computePose(vpPose::VIRTUAL_VS, cMo);
 	}
-
 }
