@@ -21,8 +21,7 @@ extern "C" {
 	VISP_EXPORT void initBlobTracker(double getMouseX, double getMouseY, unsigned int* const init_done);
 	VISP_EXPORT void getBlobCoordinates(double* cogX, double* cogY, unsigned int* const init_done);
 	VISP_EXPORT void trackBlob();
-	VISP_EXPORT void estimatePose(unsigned int* const init_pose);
 	VISP_EXPORT void getNumberOfBlobs(unsigned int* const numOfBlobs);
-	VISP_EXPORT void computePose(unsigned int* const init_pose);
+	VISP_EXPORT void estimatePose(unsigned int* const init_pose, double* cMo_pass);
 	VISP_EXPORT void initFourBlobTracker(unsigned int* const init_pose);
 }

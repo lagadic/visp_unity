@@ -1,18 +1,10 @@
 #include "visp-demo.h"
 extern "C" {
 
-	// Declaring VpImage
 	vpImage<unsigned char> image;
-
-	// Declaring blob
 	vpDot2 blob;
-
-	// Declaring initiallizing pixel
 	vpImagePoint germ;
-
-	// Declaring Center of Gravity
 	vpImagePoint cog;
-
 	vector<vpPoint> point;
   vpHomogeneousMatrix cMo;
 	list<vpDot2> blob_list;
@@ -81,8 +73,8 @@ extern "C" {
       blob.initTracking(image);
       blob.track(image);
     }
-		// Set blob characteristics for the auto detection
 
+		// Set blob characteristics for the auto detection
 		blob.setWidth(40);
     blob.setHeight(40);
     blob.setArea(1000);
@@ -112,7 +104,7 @@ extern "C" {
 		numOfBlobs[0] = blob_list.size();
 	}
 
-	void estimatePose(unsigned int* const init_pose)
+	void estimatePose(unsigned int* const init_pose, double* cMo_pass)
 	{
 	  double x=0, y=0;
 	  unsigned int i = 0;
@@ -137,5 +129,14 @@ extern "C" {
 	      cMo = cMo_lag;
 	  }
 	  pose.computePose(vpPose::VIRTUAL_VS, cMo);
+
+		for(int i = 0; i < 3; i++)
+		{
+			for(int j = 0; j < 4; j++)
+			{
+				cMo_pass[4*i+j] = cMo[i][j];
+			}
+		}
 	}
+
 }

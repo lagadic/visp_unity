@@ -39,12 +39,13 @@ public class demo : MonoBehaviour {
     // Import DLL (visp-demo.dll)
     [DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "estimatePose")]
     //Imported function estimatePose()
-    public static extern void estimatePose(uint[] init_pose);
+    public static extern void estimatePose(uint[] init_pose, double[] cMo);
 
     // Import DLL (visp-demo.dll)
     [DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "initFourBlobTracker")]
     //Imported function initFourBlobTracker()
     public static extern void initFourBlobTracker(uint[] init_pose);
+
 
     public WebCamTexture webcamTexture;
     public Color32[] data;
@@ -54,6 +55,7 @@ public class demo : MonoBehaviour {
     public uint[] init_pose;
     public double[] cogX;
     public double[] cogY;
+    public double[] cMo;
     public int SceneWidth;
     public int SceneHeight;
     public int WebCamWidth;
@@ -85,6 +87,24 @@ public class demo : MonoBehaviour {
         cogX = new double[1];
         cogY = new double[1];
 
+        /*
+        ######################################################
+        ############ cMo = pose estimation vector ############
+        ######################################################
+
+        pose estimation matrix = [ cMo[0] cMo[1] cMo[2] cMo[3]
+                                   cMo[4] cMo[5] cMo[6] cMo[7]
+                                   cMo[8] cMo[9] cMo[10] cMo[11]
+                                   0      0      0      1    ]
+
+
+        pose estimation matrix = [R(3*3) t(3*1)
+                                  0      1   ]
+
+        */
+
+        cMo = new double[12];
+
         webcamTexture = new WebCamTexture();
         Renderer renderer = GetComponent<Renderer>();
         renderer.material.mainTexture = webcamTexture;
@@ -101,9 +121,10 @@ public class demo : MonoBehaviour {
         Debug.Log("Dot Product of the vectors is:");
         Debug.Log(dot_prod(vec));
 
+        // Passing the initial frame
         passFrame(Color32ArrayToByteArray(webcamTexture.GetPixels32()), webcamTexture.height, webcamTexture.width);
         initFourBlobTracker(init_pose);
-        //trackBlob();
+
 /*
         Debug.Log("Cam width");
         Debug.Log(webcamTexture.width);
@@ -141,8 +162,13 @@ public class demo : MonoBehaviour {
         getMouseX = 1;
         getMouseY = 1;
         passFrame(Color32ArrayToByteArray(webcamTexture.GetPixels32()), webcamTexture.height, webcamTexture.width);
-        
-/*        if(init_done[0] == 0)
+
+/*
+        ############################################################
+        ############## User initiallized Blob tracker ##############
+        ############################################################
+
+        if(init_done[0] == 0)
     		{
           //Debug.Log(init_done[0]);
           initBlobTracker(getMouseX, getMouseY, init_done);
@@ -155,14 +181,22 @@ public class demo : MonoBehaviour {
           Debug.Log(cogX[0]);
           Debug.Log(cogY[0]);
         }
+
 */
         getNumberOfBlobs(numOfBlobs);
         Debug.Log("Number Of blobs");
         Debug.Log(numOfBlobs[0]);
 
         if (numOfBlobs[0] == 4) {
-          estimatePose(init_pose);
+          estimatePose(init_pose, cMo);
           init_pose[0] = 0;
+
+          Debug.Log("x-pose");
+          Debug.Log(cMo[3]);
+          Debug.Log("y-pose");
+          Debug.Log(cMo[7]);
+          Debug.Log("z-pose");
+          Debug.Log(cMo[11]);
         }
         else {
           init_pose[0] = 1;
