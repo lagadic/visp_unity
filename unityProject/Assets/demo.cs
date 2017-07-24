@@ -125,17 +125,17 @@ public class demo : MonoBehaviour {
         passFrame(Color32ArrayToByteArray(webcamTexture.GetPixels32()), webcamTexture.height, webcamTexture.width);
         initFourBlobTracker(init_pose);
 
-/*
-        Debug.Log("Cam width");
+
+        Debug.Log("webcamTexture.width");
         Debug.Log(webcamTexture.width);
-        Debug.Log("Cam height");
+        Debug.Log("webcamTexture.height");
         Debug.Log(webcamTexture.height);
 
-        Debug.Log("Window width");
+        Debug.Log("Screen.width");
         Debug.Log(Screen.width);
-        Debug.Log("Window height");
+        Debug.Log("Screen.height");
         Debug.Log(Screen.height);
-*/
+
         SceneWidth = Screen.width;
         WebCamWidth = webcamTexture.width;
 

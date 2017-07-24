@@ -8,6 +8,7 @@
 #include <visp3/blob/vpDot2.h>
 #include <visp3/core/vpImagePoint.h>
 #include <visp3/core/vpPixelMeterConversion.h>
+#include <visp3/core/vpMeterPixelConversion.h>
 #include <visp3/vision/vpPose.h>
 
 #include <iostream>

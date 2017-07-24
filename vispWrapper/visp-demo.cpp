@@ -130,6 +130,14 @@ extern "C" {
 	  }
 	  pose.computePose(vpPose::VIRTUAL_VS, cMo);
 
+		vpImagePoint temp;
+		vpImagePoint temp1;
+
+		// Converting pose coordinates from meter to pixels
+		vpMeterPixelConversion::convertPoint(cam, cMo[0][3], cMo[1][3], temp);
+		vpMeterPixelConversion::convertPoint(cam, cMo[0][3], cMo[2][3], temp1);
+
+		// Passing the cMo values via cMo_pass
 		for(int i = 0; i < 3; i++)
 		{
 			for(int j = 0; j < 4; j++)
@@ -137,6 +145,13 @@ extern "C" {
 				cMo_pass[4*i+j] = cMo[i][j];
 			}
 		}
-	}
 
+		// X - coordinate in pixel unit
+		cMo_pass[3] = temp.get_i();
+		// Y - coordinate in pixel unit
+		cMo_pass[7] = temp.get_j();
+		// Z - coordinate in pixel unit
+		cMo_pass[11] = temp1.get_i();
+
+	}
 }
