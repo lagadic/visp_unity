@@ -53,6 +53,8 @@ public class demo : MonoBehaviour {
     public uint[] numOfBlobs;
     public uint[] init_done;
     public uint[] init_pose;
+    public int[] pose_uc;
+    public double[] pose_ucoords;
     public double[] cogX;
     public double[] cogY;
     public double[] cMo;
@@ -87,6 +89,9 @@ public class demo : MonoBehaviour {
         cogX = new double[1];
         cogY = new double[1];
 
+        pose_ucoords = new double[2];
+        pose_uc = new int[2];
+
         /*
         ######################################################
         ############ cMo = pose estimation vector ############
@@ -106,6 +111,9 @@ public class demo : MonoBehaviour {
         cMo = new double[12];
 
         webcamTexture = new WebCamTexture();
+
+        webcamTexture.requestedHeight = 320;
+        webcamTexture.requestedWidth = 240;
         Renderer renderer = GetComponent<Renderer>();
         renderer.material.mainTexture = webcamTexture;
         data = new Color32[webcamTexture.width * webcamTexture.height];
@@ -124,7 +132,6 @@ public class demo : MonoBehaviour {
         // Passing the initial frame
         passFrame(Color32ArrayToByteArray(webcamTexture.GetPixels32()), webcamTexture.height, webcamTexture.width);
         initFourBlobTracker(init_pose);
-
 
         Debug.Log("webcamTexture.width");
         Debug.Log(webcamTexture.width);
@@ -163,6 +170,7 @@ public class demo : MonoBehaviour {
         getMouseY = 1;
         passFrame(Color32ArrayToByteArray(webcamTexture.GetPixels32()), webcamTexture.height, webcamTexture.width);
 
+
 /*
         ############################################################
         ############## User initiallized Blob tracker ##############
@@ -181,8 +189,8 @@ public class demo : MonoBehaviour {
           Debug.Log(cogX[0]);
           Debug.Log(cogY[0]);
         }
-
 */
+
         getNumberOfBlobs(numOfBlobs);
         Debug.Log("Number Of blobs");
         Debug.Log(numOfBlobs[0]);
@@ -191,16 +199,23 @@ public class demo : MonoBehaviour {
           estimatePose(init_pose, cMo);
           init_pose[0] = 0;
 
-          Debug.Log("x-pose");
-          Debug.Log(cMo[3]);
-          Debug.Log("y-pose");
-          Debug.Log(cMo[7]);
+          pose_ucoords[0] = 1.333 * cMo[7] + 123;
+          pose_ucoords[1] = 320 - 1.333 * cMo[3];
+
+          pose_uc[0] = (int)(Math.Floor(pose_ucoords[0]));
+          pose_uc[1] = (int)(Math.Floor(pose_ucoords[1]));
+
+          Debug.Log("x-pose in unity cam coordinates");
+          Debug.Log(pose_uc[0]);
+          Debug.Log("y-pose in unity cam coordinates");
+          Debug.Log(pose_uc[1]);
           Debug.Log("z-pose");
           Debug.Log(cMo[11]);
         }
         else {
           init_pose[0] = 1;
         }
+
     }
 
     private static byte[] Color32ArrayToByteArray(Color32[] colors)
