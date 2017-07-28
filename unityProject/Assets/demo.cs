@@ -47,13 +47,12 @@ public class demo : MonoBehaviour {
     public static extern void initFourBlobTracker(uint[] init_pose);
 
 
+    public GameObject cube;
     public WebCamTexture webcamTexture;
     public Color32[] data;
-    public Vector4 cubeCoords;
-    public GameObject cube;
     public Matrix4x4 cMo_mat;
-    public Vector4 cam_coords;
-//    public bool[] isClicked;
+    public Vector3 gameObjCoords;
+    public Vector3 cam_coords;
     public uint[] numOfBlobs;
     public uint[] init_done;
     public uint[] init_pose;
@@ -79,8 +78,6 @@ public class demo : MonoBehaviour {
 
     void Start()
     {
-        //isClicked = new bool[1];
-        //isClicked[0] = true;
         init_done = new uint[1];
         init_done[0] = 0;
 
@@ -101,7 +98,6 @@ public class demo : MonoBehaviour {
         cam_coords[0] = Camera.main.transform.position.x;
         cam_coords[1] = Camera.main.transform.position.y;
         cam_coords[2] = Camera.main.transform.position.z;
-        cam_coords[3] = 1;
 
         Debug.Log(cam_coords);
         /*
@@ -168,7 +164,6 @@ public class demo : MonoBehaviour {
         SceneHeight = Screen.height;
         WebCamHeight = webcamTexture.height;
 
-        cutoffX = (SceneWidth - WebCamWidth) / 2;
     }
 
     void Update()
@@ -220,12 +215,16 @@ public class demo : MonoBehaviour {
           cMo_mat.SetRow(1, new Vector4((float)cMo[4], (float)cMo[5], (float)cMo[6], (float)cMo[7]));
           cMo_mat.SetRow(2, new Vector4((float)cMo[8], (float)cMo[9], (float)cMo[10], (float)cMo[11]));
           cMo_mat.SetRow(3, new Vector4(0.0f, 0.0f, 0.0f, 1.0f));
-
         }
         else {
           init_pose[0] = 1;
-          cubeCoords = new Vector3(0.0f,1.0f,0.0f);
+          gameObjCoords = new Vector3(0.0f,1.0f,0.0f);
         }
+
+        gameObjCoords = cMo_mat.MultiplyPoint3x4(cam_coords);
+        Debug.Log("Coordinates of Game Object: ");
+        Debug.Log(gameObjCoords);
+        cube.transform.position = gameObjCoords;
     }
 
     private static byte[] Color32ArrayToByteArray(Color32[] colors)
