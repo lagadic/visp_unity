@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -49,6 +49,10 @@ public class demo : MonoBehaviour {
 
     public WebCamTexture webcamTexture;
     public Color32[] data;
+    public Vector4 cubeCoords;
+    public GameObject cube;
+    public Matrix4x4 cMo_mat;
+    public Vector4 cam_coords;
 //    public bool[] isClicked;
     public uint[] numOfBlobs;
     public uint[] init_done;
@@ -92,6 +96,14 @@ public class demo : MonoBehaviour {
         pose_ucoords = new double[2];
         pose_uc = new int[2];
 
+        cMo_mat = new Matrix4x4();
+
+        cam_coords[0] = Camera.main.transform.position.x;
+        cam_coords[1] = Camera.main.transform.position.y;
+        cam_coords[2] = Camera.main.transform.position.z;
+        cam_coords[3] = 1;
+
+        Debug.Log(cam_coords);
         /*
         ######################################################
         ############ cMo = pose estimation vector ############
@@ -109,8 +121,15 @@ public class demo : MonoBehaviour {
         */
 
         cMo = new double[12];
+        cMo_mat.SetRow(0, new Vector4(1f, 0f, 0f, 0f));
+        cMo_mat.SetRow(1, new Vector4(0f, 1f, 0f, 0f));
+        cMo_mat.SetRow(2, new Vector4(0f, 0f, 1f, 0f));
+        cMo_mat.SetRow(3, new Vector4(0f, 0f, 0f, 1f));
 
         webcamTexture = new WebCamTexture();
+
+        cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        cube.AddComponent<Rigidbody>();
 
         webcamTexture.requestedHeight = 320;
         webcamTexture.requestedWidth = 240;
@@ -162,8 +181,6 @@ public class demo : MonoBehaviour {
             Debug.Log("Pressed left click.");
             Debug.Log(Input.mousePosition[0]);
             Debug.Log(Input.mousePosition[1]);
-            //getMouseX = Input.mousePosition[0] - cutoffX;
-            //getMouseY = WebCamHeight - Debug.Log(Input.mousePosition[1]);
 	      }
 
         getMouseX = 1;
@@ -199,23 +216,16 @@ public class demo : MonoBehaviour {
           estimatePose(init_pose, cMo);
           init_pose[0] = 0;
 
-          pose_ucoords[0] = 1.333 * cMo[7] + 123;
-          pose_ucoords[1] = 320 - 1.333 * cMo[3];
+          cMo_mat.SetRow(0, new Vector4((float)cMo[0], (float)cMo[1], (float)cMo[2], (float)cMo[3]));
+          cMo_mat.SetRow(1, new Vector4((float)cMo[4], (float)cMo[5], (float)cMo[6], (float)cMo[7]));
+          cMo_mat.SetRow(2, new Vector4((float)cMo[8], (float)cMo[9], (float)cMo[10], (float)cMo[11]));
+          cMo_mat.SetRow(3, new Vector4(0.0f, 0.0f, 0.0f, 1.0f));
 
-          pose_uc[0] = (int)(Math.Floor(pose_ucoords[0]));
-          pose_uc[1] = (int)(Math.Floor(pose_ucoords[1]));
-
-          Debug.Log("x-pose in unity cam coordinates");
-          Debug.Log(pose_uc[0]);
-          Debug.Log("y-pose in unity cam coordinates");
-          Debug.Log(pose_uc[1]);
-          Debug.Log("z-pose");
-          Debug.Log(cMo[11]);
         }
         else {
           init_pose[0] = 1;
+          cubeCoords = new Vector3(0.0f,1.0f,0.0f);
         }
-
     }
 
     private static byte[] Color32ArrayToByteArray(Color32[] colors)
