@@ -1,3 +1,28 @@
+/*
+C# Script showing how to use visp library in unity.
+
+This script establishes:
+1. Basic data communication between visp and unity. Eg: finding dot product of two vectors.
+2. User initialized blob tracking.
+3. four blob detecting and tracking. Finally, finding the pose using four point blob algorithm.
+
+vectors:
+a = {a1, a2, a3};
+b = {b1, b2, b3};
+
+cMo = pose estimation vector
+
+pose estimation matrix = [ cMo[0] cMo[1] cMo[2] cMo[3]
+                           cMo[4] cMo[5] cMo[6] cMo[7]
+                           cMo[8] cMo[9] cMo[10] cMo[11]
+                           0      0      0      1    ]
+
+
+pose estimation matrix = [R(3*3) t(3*1)
+                          0      1   ]
+
+*/
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -57,8 +82,6 @@ public class demo : MonoBehaviour {
     public uint[] numOfBlobs;
     public uint[] init_done;
     public uint[] init_pose;
-    public int[] pose_uc;
-    public double[] pose_ucoords;
     public double[] cogX;
     public double[] cogY;
     public double[] cMo;
@@ -70,118 +93,30 @@ public class demo : MonoBehaviour {
     public int cutoffY;
     public double getMouseX;
     public double getMouseY;
-    public double x;
-    public double y;
-    public double z;
-    //vectors:
-    //a = {a1, a2, a3};
-    //b = {b1, b2, b3};
+    public double gameObjX;
+    public double gameObjY;
+    public double gameObjZ;
 
     public uint[] vec;
 
     void Start()
     {
-        init_done = new uint[1];
-        init_done[0] = 0;
-
-        init_pose = new uint[1];
-        init_pose[0] = 0;
-
-        numOfBlobs = new uint[1];
-
-        // Initialize cogX, cogY [center of gravity]
-        cogX = new double[1];
-        cogY = new double[1];
-
-        pose_ucoords = new double[2];
-        pose_uc = new int[2];
-
-        cMo_mat = new Matrix4x4();
-
-        cam_coords[0] = Camera.main.transform.position.x;
-        cam_coords[1] = Camera.main.transform.position.y;
-        cam_coords[2] = Camera.main.transform.position.z;
-
-        cam_direction = Camera.main.transform.eulerAngles;
-        Debug.Log("Orentation");
-        Debug.Log(cam_direction);
-        Debug.Log("coordinates");
-        Debug.Log(cam_coords);
-        /*
-        ######################################################
-        ############ cMo = pose estimation vector ############
-        ######################################################
-
-        pose estimation matrix = [ cMo[0] cMo[1] cMo[2] cMo[3]
-                                   cMo[4] cMo[5] cMo[6] cMo[7]
-                                   cMo[8] cMo[9] cMo[10] cMo[11]
-                                   0      0      0      1    ]
-
-
-        pose estimation matrix = [R(3*3) t(3*1)
-                                  0      1   ]
-
-        */
-
-        cMo = new double[12];
-        cMo_mat.SetRow(0, new Vector4(1f, 0f, 0f, 0f));
-        cMo_mat.SetRow(1, new Vector4(0f, 1f, 0f, 0f));
-        cMo_mat.SetRow(2, new Vector4(0f, 0f, 1f, 0f));
-        cMo_mat.SetRow(3, new Vector4(0f, 0f, 0f, 1f));
-
-        cMo[3] = 0;
-        cMo[7] = 0;
-        cMo[11]= 1;
-
-        webcamTexture = new WebCamTexture();
-
-        cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        cube.AddComponent<Rigidbody>();
-
-        webcamTexture.requestedHeight = 320;
-        webcamTexture.requestedWidth = 240;
-        Renderer renderer = GetComponent<Renderer>();
-        renderer.material.mainTexture = webcamTexture;
-        data = new Color32[webcamTexture.width * webcamTexture.height];
+        declVars();
+        initVars();
+        initGameObj();
+        initWebcam();
         webcamTexture.Play();
-
-        vec = new uint[6];
-        vec[0] =  1;
-        vec[1] =  2;
-        vec[2] =  3;
-        vec[3] =  1;
-        vec[4] =  2;
-        vec[5] =  3;
-        Debug.Log("Dot Product of the vectors is:");
-        Debug.Log(dot_prod(vec));
+        printDotProd();
 
         // Passing the initial frame
         passFrame(Color32ArrayToByteArray(webcamTexture.GetPixels32()), webcamTexture.height, webcamTexture.width);
         initFourBlobTracker(init_pose);
-/*
-        Debug.Log("webcamTexture.width");
-        Debug.Log(webcamTexture.width);
-        Debug.Log("webcamTexture.height");
-        Debug.Log(webcamTexture.height);
-
-        Debug.Log("Screen.width");
-        Debug.Log(Screen.width);
-        Debug.Log("Screen.height");
-        Debug.Log(Screen.height);
-
-        SceneWidth = Screen.width;
-        WebCamWidth = webcamTexture.width;
-
-        SceneHeight = Screen.height;
-        WebCamHeight = webcamTexture.height;
-*/
     }
 
     void Update()
     {
-        // ##############################################################################
-        // ### Get the coordinates getMouseX and getMouseY from the scene as doubles. ###
-        // ##############################################################################
+        // Get the coordinates getMouseX and getMouseY from the scene as doubles.
+
         if (Input.GetMouseButtonDown(0))
         {
             Debug.Log("Pressed left click.");
@@ -193,26 +128,8 @@ public class demo : MonoBehaviour {
         getMouseY = 1;
         passFrame(Color32ArrayToByteArray(webcamTexture.GetPixels32()), webcamTexture.height, webcamTexture.width);
 
-
-/*
-        ############################################################
-        ############## User initiallized Blob tracker ##############
-        ############################################################
-
-        if(init_done[0] == 0)
-    		{
-          //Debug.Log(init_done[0]);
-          initBlobTracker(getMouseX, getMouseY, init_done);
-        }
-        else
-        {
-          Debug.Log("tracking");
-          trackBlob();
-          getBlobCoordinates(cogX, cogY, init_done);
-          Debug.Log(cogX[0]);
-          Debug.Log(cogY[0]);
-        }
-*/
+        // User initiallized Blob tracker
+        // ublobTrack();
 
         getNumberOfBlobs(numOfBlobs);
         Debug.Log("Number Of blobs");
@@ -221,36 +138,130 @@ public class demo : MonoBehaviour {
         if (numOfBlobs[0] == 4) {
           estimatePose(init_pose, cMo);
           init_pose[0] = 0;
+
 /*
-          cMo_mat.SetRow(0, new Vector4((float)cMo[0], (float)cMo[1], (float)cMo[2], (float)cMo[3]));
-          cMo_mat.SetRow(1, new Vector4((float)cMo[4], (float)cMo[5], (float)cMo[6], (float)cMo[7]));
-          cMo_mat.SetRow(2, new Vector4((float)cMo[8], (float)cMo[9], (float)cMo[10], (float)cMo[11]));
-
-
           cMo_mat.SetRow(0, new Vector4(0, 0, 0, (float)cMo[3]));
           cMo_mat.SetRow(1, new Vector4(0, 0, 0, (float)cMo[7]));
           cMo_mat.SetRow(2, new Vector4(0, 0, 0, -1*(float)cMo[11]));
           cMo_mat.SetRow(3, new Vector4(0.0f, 0.0f, 0.0f, 1.0f));
-          */
+*/
         }
         else {
           init_pose[0] = 1;
-//          gameObjCoords = new Vector3(0.0f,1.0f,0.0f);
         }
-        //gameObjCoords = cMo_mat.MultiplyPoint3x4(cam_coords);
-        x = 10 * cMo[3] / cMo[11];
-        y = 10 * cMo[7] / cMo[11];
-        z = 0;
 
-        gameObjCoords[0] = (float)x;
-        gameObjCoords[1] = (float)y;
-        gameObjCoords[2] = (float)z;
+        //gameObjCoords = cMo_mat.MultiplyPoint3x4(cam_coords);
+
+        // Scaling the x,y screen coordinates.
+        gameObjX = 10 * cMo[3] / cMo[11];
+        gameObjY = 10 * cMo[7] / cMo[11];
+        gameObjZ = 0;
+
+        gameObjCoords[0] = (float)gameObjX;
+        gameObjCoords[1] = (float)gameObjY;
+        gameObjCoords[2] = (float)gameObjZ;
 
         Debug.Log("Coordinates of Game Object: ");
         Debug.Log(gameObjCoords[0]);
         Debug.Log(gameObjCoords[1]);
         Debug.Log(gameObjCoords[2]);
+
+        // update cube gameObj position
         cube.transform.position = gameObjCoords;
+    }
+
+    void printDotProd()
+    {
+      Debug.Log("Dot Product of the vectors is:");
+      Debug.Log(dot_prod(vec));
+    }
+
+    void declVars()
+    {
+      // init flag variables
+      init_done = new uint[1];
+      init_pose = new uint[1];
+
+      // Number of blobs detected
+      numOfBlobs = new uint[1];
+
+      // Initialize cogX, cogY [center of gravity]
+      cogX = new double[1];
+      cogY = new double[1];
+
+      // Pose matrix cMo
+      cMo = new double[12];
+      cMo_mat = new Matrix4x4();
+
+      // webCamTexture
+      webcamTexture = new WebCamTexture();
+    }
+
+    void initVars()
+    {
+      // init flags as false
+      init_done[0] = 0;
+      init_pose[0] = 0;
+
+      // main camera coordinates
+      cam_coords[0] = Camera.main.transform.position.x;
+      cam_coords[1] = Camera.main.transform.position.y;
+      cam_coords[2] = Camera.main.transform.position.z;
+
+      // main camera orentation in euler angles
+      cam_direction = Camera.main.transform.eulerAngles;
+
+      // init cMo pose matrix
+      cMo_mat.SetRow(0, new Vector4(1f, 0f, 0f, 0f));
+      cMo_mat.SetRow(1, new Vector4(0f, 1f, 0f, 0f));
+      cMo_mat.SetRow(2, new Vector4(0f, 0f, 1f, 0f));
+      cMo_mat.SetRow(3, new Vector4(0f, 0f, 0f, 1f));
+
+      // init cMo vector, to be populated by estimatePose()
+      cMo[3] = 0;
+      cMo[7] = 0;
+      cMo[11]= 1;
+
+      // init vector for passing through dot_prod()
+      vec = new uint[] {1,2,3,1,2,3};
+    }
+
+    void ublobTrack()
+    {
+      // user initialized blob tracker
+      if(init_done[0] == 0)
+      {
+        initBlobTracker(getMouseX, getMouseY, init_done);
+      }
+      else
+      {
+        Debug.Log("tracking");
+        trackBlob();
+        getBlobCoordinates(cogX, cogY, init_done);
+        Debug.Log(cogX[0]);
+        Debug.Log(cogY[0]);
+      }
+    }
+
+    void initGameObj()
+    {
+      // init cube GameObject
+      cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+      cube.AddComponent<Rigidbody>();
+    }
+
+    void initWebcam()
+    {
+      // set webcamTexture height and width
+      webcamTexture.requestedHeight = 320;
+      webcamTexture.requestedWidth = 240;
+
+      // init renderer
+      Renderer renderer = GetComponent<Renderer>();
+      renderer.material.mainTexture = webcamTexture;
+
+      // declare frame data as Color32
+      data = new Color32[webcamTexture.width * webcamTexture.height];
     }
 
     private static byte[] Color32ArrayToByteArray(Color32[] colors)
@@ -272,7 +283,6 @@ public class demo : MonoBehaviour {
             value = (colors[i].r + colors[i].g + colors[i].b) / 3;
             bytes[colors.Length - i -1] = (byte)value;
         }
-
         return bytes;
     }
 }
