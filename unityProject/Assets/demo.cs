@@ -50,6 +50,7 @@ public class demo : MonoBehaviour {
     public GameObject cube;
     public WebCamTexture webcamTexture;
     public Color32[] data;
+    public Vector3 cam_direction;
     public Matrix4x4 cMo_mat;
     public Vector3 gameObjCoords;
     public Vector3 cam_coords;
@@ -69,7 +70,9 @@ public class demo : MonoBehaviour {
     public int cutoffY;
     public double getMouseX;
     public double getMouseY;
-
+    public double x;
+    public double y;
+    public double z;
     //vectors:
     //a = {a1, a2, a3};
     //b = {b1, b2, b3};
@@ -99,6 +102,10 @@ public class demo : MonoBehaviour {
         cam_coords[1] = Camera.main.transform.position.y;
         cam_coords[2] = Camera.main.transform.position.z;
 
+        cam_direction = Camera.main.transform.eulerAngles;
+        Debug.Log("Orentation");
+        Debug.Log(cam_direction);
+        Debug.Log("coordinates");
         Debug.Log(cam_coords);
         /*
         ######################################################
@@ -121,6 +128,10 @@ public class demo : MonoBehaviour {
         cMo_mat.SetRow(1, new Vector4(0f, 1f, 0f, 0f));
         cMo_mat.SetRow(2, new Vector4(0f, 0f, 1f, 0f));
         cMo_mat.SetRow(3, new Vector4(0f, 0f, 0f, 1f));
+
+        cMo[3] = 0;
+        cMo[7] = 0;
+        cMo[11]= 1;
 
         webcamTexture = new WebCamTexture();
 
@@ -147,7 +158,7 @@ public class demo : MonoBehaviour {
         // Passing the initial frame
         passFrame(Color32ArrayToByteArray(webcamTexture.GetPixels32()), webcamTexture.height, webcamTexture.width);
         initFourBlobTracker(init_pose);
-
+/*
         Debug.Log("webcamTexture.width");
         Debug.Log(webcamTexture.width);
         Debug.Log("webcamTexture.height");
@@ -163,7 +174,7 @@ public class demo : MonoBehaviour {
 
         SceneHeight = Screen.height;
         WebCamHeight = webcamTexture.height;
-
+*/
     }
 
     void Update()
@@ -210,20 +221,35 @@ public class demo : MonoBehaviour {
         if (numOfBlobs[0] == 4) {
           estimatePose(init_pose, cMo);
           init_pose[0] = 0;
-
+/*
           cMo_mat.SetRow(0, new Vector4((float)cMo[0], (float)cMo[1], (float)cMo[2], (float)cMo[3]));
           cMo_mat.SetRow(1, new Vector4((float)cMo[4], (float)cMo[5], (float)cMo[6], (float)cMo[7]));
           cMo_mat.SetRow(2, new Vector4((float)cMo[8], (float)cMo[9], (float)cMo[10], (float)cMo[11]));
+
+
+          cMo_mat.SetRow(0, new Vector4(0, 0, 0, (float)cMo[3]));
+          cMo_mat.SetRow(1, new Vector4(0, 0, 0, (float)cMo[7]));
+          cMo_mat.SetRow(2, new Vector4(0, 0, 0, -1*(float)cMo[11]));
           cMo_mat.SetRow(3, new Vector4(0.0f, 0.0f, 0.0f, 1.0f));
+          */
         }
         else {
           init_pose[0] = 1;
-          gameObjCoords = new Vector3(0.0f,1.0f,0.0f);
+//          gameObjCoords = new Vector3(0.0f,1.0f,0.0f);
         }
+        //gameObjCoords = cMo_mat.MultiplyPoint3x4(cam_coords);
+        x = 10 * cMo[3] / cMo[11];
+        y = 10 * cMo[7] / cMo[11];
+        z = 0;
 
-        gameObjCoords = cMo_mat.MultiplyPoint3x4(cam_coords);
+        gameObjCoords[0] = (float)x;
+        gameObjCoords[1] = (float)y;
+        gameObjCoords[2] = (float)z;
+
         Debug.Log("Coordinates of Game Object: ");
-        Debug.Log(gameObjCoords);
+        Debug.Log(gameObjCoords[0]);
+        Debug.Log(gameObjCoords[1]);
+        Debug.Log(gameObjCoords[2]);
         cube.transform.position = gameObjCoords;
     }
 
