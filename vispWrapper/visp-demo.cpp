@@ -147,11 +147,11 @@ extern "C" {
 		}
 
 		// X - coordinate in pixel unit
-		//cMo_pass[3] = temp.get_i();
+		cMo_pass[3] = temp.get_i();
 		// Y - coordinate in pixel unit
-		//cMo_pass[7] = temp.get_j();
+		cMo_pass[7] = temp.get_j();
 		// Z - coordinate in pixel unit
-		//cMo_pass[11] = temp1.get_i();
+		cMo_pass[11] = temp1.get_i();
 
 	}
 }

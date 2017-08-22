@@ -1,5 +1,6 @@
 /*
-C# Script showing how to use visp library in unity.
+C# Script
+How to use visp library in unity.
 
 This script establishes:
 1. Basic data communication between visp and unity. Eg: finding dot product of two vectors.
@@ -79,6 +80,7 @@ public class demo : MonoBehaviour {
     public Matrix4x4 cMo_mat;
     public Vector3 gameObjCoords;
     public Vector3 cam_coords;
+    public Vector3 lol;
     public uint[] numOfBlobs;
     public uint[] init_done;
     public uint[] init_pose;
@@ -111,6 +113,24 @@ public class demo : MonoBehaviour {
         // Passing the initial frame
         passFrame(Color32ArrayToByteArray(webcamTexture.GetPixels32()), webcamTexture.height, webcamTexture.width);
         initFourBlobTracker(init_pose);
+        Debug.Log(lol);
+/*
+        Debug.Log("webcamTexture.width");
+        Debug.Log(webcamTexture.width);
+        Debug.Log("webcamTexture.height");
+        Debug.Log(webcamTexture.height);
+
+        Debug.Log("Screen.width");
+        Debug.Log(Screen.width);
+        Debug.Log("Screen.height");
+        Debug.Log(Screen.height);
+
+        SceneWidth = Screen.width;
+        WebCamWidth = webcamTexture.width;
+
+        SceneHeight = Screen.height;
+        WebCamHeight = webcamTexture.height;
+*/
     }
 
     void Update()
@@ -153,8 +173,8 @@ public class demo : MonoBehaviour {
         //gameObjCoords = cMo_mat.MultiplyPoint3x4(cam_coords);
 
         // Scaling the x,y screen coordinates.
-        gameObjX = 10 * cMo[3] / cMo[11];
-        gameObjY = 10 * cMo[7] / cMo[11];
+        gameObjX = (cMo[3] - 120)/24;
+        gameObjY = (cMo[7] - 160)/24;
         gameObjZ = 0;
 
         gameObjCoords[0] = (float)gameObjX;
@@ -168,6 +188,7 @@ public class demo : MonoBehaviour {
 
         // update cube gameObj position
         cube.transform.position = gameObjCoords;
+//        Debug.Log(cube.transform.position);
     }
 
     void printDotProd()
@@ -260,6 +281,9 @@ public class demo : MonoBehaviour {
       Renderer renderer = GetComponent<Renderer>();
       renderer.material.mainTexture = webcamTexture;
 
+      Debug.Log(renderer.bounds.size.x);
+      Debug.Log(renderer.bounds.size.y);
+      Debug.Log(renderer.bounds.size.z);
       // declare frame data as Color32
       data = new Color32[webcamTexture.width * webcamTexture.height];
     }
