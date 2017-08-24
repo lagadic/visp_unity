@@ -76,11 +76,11 @@ public class demo : MonoBehaviour {
     public GameObject cube;
     public WebCamTexture webcamTexture;
     public Color32[] data;
+    public Color blue;
     public Vector3 cam_direction;
     public Matrix4x4 cMo_mat;
     public Vector3 gameObjCoords;
     public Vector3 cam_coords;
-    public Vector3 lol;
     public uint[] numOfBlobs;
     public uint[] init_done;
     public uint[] init_pose;
@@ -113,24 +113,12 @@ public class demo : MonoBehaviour {
         // Passing the initial frame
         passFrame(Color32ArrayToByteArray(webcamTexture.GetPixels32()), webcamTexture.height, webcamTexture.width);
         initFourBlobTracker(init_pose);
-        Debug.Log(lol);
-/*
-        Debug.Log("webcamTexture.width");
-        Debug.Log(webcamTexture.width);
-        Debug.Log("webcamTexture.height");
-        Debug.Log(webcamTexture.height);
 
-        Debug.Log("Screen.width");
-        Debug.Log(Screen.width);
-        Debug.Log("Screen.height");
-        Debug.Log(Screen.height);
+        //changing cube dimentions to make it visible in front of the camera
+        cube.transform.localScale = new Vector3(0.1f,0.1f,0.1f);
 
-        SceneWidth = Screen.width;
-        WebCamWidth = webcamTexture.width;
-
-        SceneHeight = Screen.height;
-        WebCamHeight = webcamTexture.height;
-*/
+        //setting cube color to blue
+        cube.GetComponent<Renderer>().material.color = blue;
     }
 
     void Update()
@@ -158,13 +146,6 @@ public class demo : MonoBehaviour {
         if (numOfBlobs[0] == 4) {
           estimatePose(init_pose, cMo);
           init_pose[0] = 0;
-
-/*
-          cMo_mat.SetRow(0, new Vector4(0, 0, 0, (float)cMo[3]));
-          cMo_mat.SetRow(1, new Vector4(0, 0, 0, (float)cMo[7]));
-          cMo_mat.SetRow(2, new Vector4(0, 0, 0, -1*(float)cMo[11]));
-          cMo_mat.SetRow(3, new Vector4(0.0f, 0.0f, 0.0f, 1.0f));
-*/
           cube.SetActive(true);
         }
         else {
@@ -175,13 +156,13 @@ public class demo : MonoBehaviour {
         //gameObjCoords = cMo_mat.MultiplyPoint3x4(cam_coords);
 
         // Scaling the x,y screen coordinates.
-        gameObjX = (cMo[3] - 120)/24;
-        gameObjY = (cMo[7] - 160)/24;
-        gameObjZ = 0;
+        gameObjX = cMo[3];
+        gameObjY = cMo[7];
+        gameObjZ = cMo[11];
 
         gameObjCoords[0] = (float)gameObjX;
         gameObjCoords[1] = (float)gameObjY;
-        gameObjCoords[2] = (float)gameObjZ;
+        gameObjCoords[2] = (float)(gameObjZ - 10);
 
         Debug.Log("Coordinates of Game Object: ");
         Debug.Log(gameObjCoords[0]);
@@ -190,7 +171,6 @@ public class demo : MonoBehaviour {
 
         // update cube gameObj position
         cube.transform.position = gameObjCoords;
-//        Debug.Log(cube.transform.position);
     }
 
     void printDotProd()
