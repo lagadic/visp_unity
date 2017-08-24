@@ -165,9 +165,11 @@ public class demo : MonoBehaviour {
           cMo_mat.SetRow(2, new Vector4(0, 0, 0, -1*(float)cMo[11]));
           cMo_mat.SetRow(3, new Vector4(0.0f, 0.0f, 0.0f, 1.0f));
 */
+          cube.SetActive(true);
         }
         else {
           init_pose[0] = 1;
+          cube.SetActive(false);
         }
 
         //gameObjCoords = cMo_mat.MultiplyPoint3x4(cam_coords);
