@@ -3,13 +3,9 @@
    How to use visp library in unity.
 
    This script establishes:
-   1. Basic data communication between visp and unity. Eg: finding dot product of two vectors.
+   1. Basic data communication between visp and unity.
    2. User initialized blob tracking.
    3. four blob detecting and tracking. Finally, finding the pose using four point blob algorithm.
-
-vectors:
-a = {a1, a2, a3};
-b = {b1, b2, b3};
 
 cMo = pose estimation vector
 
@@ -20,7 +16,7 @@ cMo[8] cMo[9] cMo[10] cMo[11]
 
 
 pose estimation matrix = [R(3*3) t(3*1)
-0      1   ]
+                           0      1   ]
 
 */
 
@@ -32,43 +28,38 @@ using UnityEngine;
 
 public class demo : MonoBehaviour {
 
-	// Import DLL (visp-demo.dll)
-	[DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "dot_prod")]
-	//Imported function dot_prod()
-	public static extern double dot_prod(uint[] vec);
-
-	// Import DLL (visp-demo.dll)
-	[DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "passFrame")]
+	// Import DLL (visp-plugin-pose-estimation.dll)
+	[DllImport("visp-plugin-pose-estimation", CallingConvention = CallingConvention.Cdecl, EntryPoint = "passFrame")]
 	//Imported function passFrame()
 	public static extern void passFrame(byte[] bitmap, int height, int width);
 
-	// Import DLL (visp-demo.dll)
-	[DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "initBlobTracker")]
+	// Import DLL (visp-plugin-pose-estimation.dll)
+	[DllImport("visp-plugin-pose-estimation", CallingConvention = CallingConvention.Cdecl, EntryPoint = "initBlobTracker")]
 	//Imported function initBlobTracker()
 	public static extern void initBlobTracker(double getMouseX, double getMouseY, uint[] init_done);
 
-	// Import DLL (visp-demo.dll)
-	[DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "trackBlob")]
+	// Import DLL (visp-plugin-pose-estimation.dll)
+	[DllImport("visp-plugin-pose-estimation", CallingConvention = CallingConvention.Cdecl, EntryPoint = "trackBlob")]
 	//Imported function trackBlob()
 	public static extern void trackBlob();
 
-	// Import DLL (visp-demo.dll)
-	[DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "getBlobCoordinates")]
+	// Import DLL (visp-plugin-pose-estimation.dll)
+	[DllImport("visp-plugin-pose-estimation", CallingConvention = CallingConvention.Cdecl, EntryPoint = "getBlobCoordinates")]
 	//Imported function getBlobCoordinates()
 	public static extern void getBlobCoordinates(double[] cogX, double[] cogY, uint[] init_done);
 
-	// Import DLL (visp-demo.dll)
-	[DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "getNumberOfBlobs")]
+	// Import DLL (visp-plugin-pose-estimation.dll)
+	[DllImport("visp-plugin-pose-estimation", CallingConvention = CallingConvention.Cdecl, EntryPoint = "getNumberOfBlobs")]
 	//Imported function getNumberOfBlobs()
 	public static extern void getNumberOfBlobs(uint[] numOfBlobs);
 
-	// Import DLL (visp-demo.dll)
-	[DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "estimatePose")]
+	// Import DLL (visp-plugin-pose-estimation.dll)
+	[DllImport("visp-plugin-pose-estimation", CallingConvention = CallingConvention.Cdecl, EntryPoint = "estimatePose")]
 	//Imported function estimatePose()
 	public static extern void estimatePose(uint[] init_pose, double[] cMo);
 
-	// Import DLL (visp-demo.dll)
-	[DllImport("visp-demo", CallingConvention = CallingConvention.Cdecl, EntryPoint = "initFourBlobTracker")]
+	// Import DLL (visp-plugin-pose-estimation.dll)
+	[DllImport("visp-plugin-pose-estimation", CallingConvention = CallingConvention.Cdecl, EntryPoint = "initFourBlobTracker")]
 	//Imported function initFourBlobTracker()
 	public static extern void initFourBlobTracker(uint[] init_pose);
 
@@ -99,8 +90,6 @@ public class demo : MonoBehaviour {
 	public double gameObjY;
 	public double gameObjZ;
 
-	public uint[] vec;
-
 	void Start()
 	{
 		declVars();
@@ -108,7 +97,6 @@ public class demo : MonoBehaviour {
 		initGameObj();
 		initWebcam();
 		webcamTexture.Play();
-		printDotProd();
 
 		// Passing the initial frame
 		passFrame(Color32ArrayToByteArray(webcamTexture.GetPixels32()), webcamTexture.height, webcamTexture.width);
@@ -173,12 +161,6 @@ public class demo : MonoBehaviour {
 		cube.transform.position = gameObjCoords;
 	}
 
-	void printDotProd()
-	{
-		Debug.Log("Dot Product of the vectors is:");
-		Debug.Log(dot_prod(vec));
-	}
-
 	void declVars()
 	{
 		// init flag variables
@@ -234,12 +216,12 @@ public class demo : MonoBehaviour {
 		// user initialized blob tracker
 		if(init_done[0] == 0)
 		{
+			Debug.Log("Initializing");
 			initBlobTracker(getMouseX, getMouseY, init_done);
 		}
 		else
 		{
-			Debug.Log("tracking");
-			trackBlob();
+			Debug.Log("Tracking");
 			getBlobCoordinates(cogX, cogY, init_done);
 			Debug.Log(cogX[0]);
 			Debug.Log(cogY[0]);

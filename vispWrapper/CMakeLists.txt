@@ -6,8 +6,11 @@ find_package(VISP REQUIRED visp_core visp_blob visp_vision)
 
 include_directories(${VISP_INCLUDE_DIRS})
 
-add_library(visp-demo SHARED visp-demo.cpp)
-target_link_libraries(visp-demo ${VISP_LIBRARIES})
+add_library(visp-plugin-frame SHARED visp-plugin-frame.cpp)
+target_link_libraries(visp-plugin-frame ${VISP_LIBRARIES})
+
+add_library(visp-plugin-pose-estimation SHARED visp-plugin-pose-estimation.cpp)
+target_link_libraries(visp-plugin-pose-estimation ${VISP_LIBRARIES})
 
 set(VISP_WRAPPER_DOC_DIR "${VISP_WRAPPER_BINARY_DIR}/doc")
 

@@ -1,4 +1,4 @@
-#include "visp-demo.h"
+#include "visp-plugin-pose-estimation.h"
 extern "C" {
 
 	vpImage<unsigned char> image;
@@ -10,25 +10,6 @@ extern "C" {
 	list<vpDot2> blob_list;
 	vpCameraParameters cam;
   vpPose pose;
-	/*
-	// major functions used in getting started tutorial //
-	*/
-	double dot_prod(unsigned int* const A){
-		//Defining (1 X 3) Row Vector
-		vpRowVector r(3);
-		r[0] = A[0];
-		r[1] = A[1];
-		r[2] = A[2];
-		//Defining (3 X 1) Coulmn Vector
-		vpColVector c(3);
-		c[0] = A[3];
-		c[1] = A[4];
-		c[2] = A[5];
-
-		//Dot Product
-		double product = r * c;
-		return product;
-	}
 
 	// Greyscale bitmap from Unity to vpImage
 	void passFrame(unsigned char* const bitmap, int height, int width){
@@ -39,9 +20,6 @@ extern "C" {
 		image.bitmap = bitmap;
 	}
 
-	/*
-	// major functions used in Blob tracker tutorial //
-	*/
 	void initBlobTracker(double getMouseX, double getMouseY, unsigned int* const init_done)
 	{
 		// Define Blob initial tracking pixel as a vpImagePoint
@@ -60,6 +38,7 @@ extern "C" {
 	void getBlobCoordinates(double* cogX, double* cogY, unsigned int* const init_done)
 	{
 		try {
+			blob.track(image);
 			// Get the Center of Gravity of the tracked blob
 			vpImagePoint cog = blob.getCog();
 			cogX[0] = cog.get_i();
