@@ -50,14 +50,15 @@ We also include header vpImage to store the image by passing the image data as a
 We intend to export these functions in form of a shared library. It is necessary that function definitions are binded to __declspec(dllexport).
 VISP_EXPORT does that for us, which is defined in vpConfig.
 
-The underlying concept for writing functions in C++ to be used in a shared library is as follows: Since we're establishing communication
+The underlying concept for writing functions in C++ to be used in a shared library is, since we're establishing communication
 between C++ (ViSP) and C# (Unity) we have to pass data as basic data types like int, char, float and avoid using complex data types. This
-is why pass by reference is a good idea while writing these functions rather than pass by value.
+is why pass by reference is preferred over pass by value.
 
 \code
 VISP_EXPORT double dot_prod(unsigned int* const A);
 VISP_EXPORT void passFrame(unsigned char* const bitmap, int height, int width);
 \endcode
+
 
 
 The function dot_prod() passes an unsigned int array as an argument that consists of two vectors. Similarly, in the function passFrame we pass

@@ -6,11 +6,13 @@ extern "C" {
 	vpImagePoint germ;
 	vpImagePoint cog;
 	vector<vpPoint> point;
-	vpHomogeneousMatrix cMo;
+  vpHomogeneousMatrix cMo;
 	list<vpDot2> blob_list;
 	vpCameraParameters cam;
-	vpPose pose;
-
+  vpPose pose;
+	/*
+	// major functions used in getting started tutorial //
+	*/
 	double dot_prod(unsigned int* const A){
 		//Defining (1 X 3) Row Vector
 		vpRowVector r(3);
@@ -37,6 +39,9 @@ extern "C" {
 		image.bitmap = bitmap;
 	}
 
+	/*
+	// major functions used in Blob tracker tutorial //
+	*/
 	void initBlobTracker(double getMouseX, double getMouseY, unsigned int* const init_done)
 	{
 		// Define Blob initial tracking pixel as a vpImagePoint
@@ -69,25 +74,25 @@ extern "C" {
 	{
 		if (0) {
 			// code used to learn the characteristics of a blob that we want to retrieve automatically
-			// Learn the characteristics of the blob to auto detect
-			blob.initTracking(image);
-			blob.track(image);
-		}
+      // Learn the characteristics of the blob to auto detect
+      blob.initTracking(image);
+      blob.track(image);
+    }
 
 		// Set blob characteristics for the auto detection
 		blob.setWidth(40);
-		blob.setHeight(40);
-		blob.setArea(1000);
-		blob.setGrayLevelMin(0);
-		blob.setGrayLevelMax(150);
-		blob.setSizePrecision(0.65);
-		blob.setEllipsoidShapePrecision(0.65);
+    blob.setHeight(40);
+    blob.setArea(1000);
+    blob.setGrayLevelMin(0);
+    blob.setGrayLevelMax(150);
+    blob.setSizePrecision(0.65);
+    blob.setEllipsoidShapePrecision(0.65);
 
 		// Define the 3D model of a target defined by 4 blobs arranged as a square
 		point.push_back( vpPoint(-0.06, -0.06, 0) );
-		point.push_back( vpPoint( 0.06, -0.06, 0) );
-		point.push_back( vpPoint( 0.06,  0.06, 0) );
-		point.push_back( vpPoint(-0.06,  0.06, 0) );
+    point.push_back( vpPoint( 0.06, -0.06, 0) );
+    point.push_back( vpPoint( 0.06,  0.06, 0) );
+    point.push_back( vpPoint(-0.06,  0.06, 0) );
 
 		cam.initPersProjWithoutDistortion(840, 840, image.getWidth()/2, image.getHeight()/2);
 		init_pose[0] = 1;
@@ -106,29 +111,29 @@ extern "C" {
 
 	void estimatePose(unsigned int* const init_pose, double* cMo_pass)
 	{
-		double x=0, y=0;
-		unsigned int i = 0;
-		for (std::list<vpDot2>::const_iterator it=blob_list.begin(); it != blob_list.end(); ++it) {
-			vpPixelMeterConversion::convertPoint(cam, (*it).getCog(), x, y);
-			point[i].set_x(x);
-			point[i].set_y(y);
-			pose.addPoint(point[i]);
-			i++;
-		}
+	  double x=0, y=0;
+	  unsigned int i = 0;
+	  for (std::list<vpDot2>::const_iterator it=blob_list.begin(); it != blob_list.end(); ++it) {
+	    vpPixelMeterConversion::convertPoint(cam, (*it).getCog(), x, y);
+	    point[i].set_x(x);
+	    point[i].set_y(y);
+	    pose.addPoint(point[i]);
+	    i++;
+	  }
 
-		if (init_pose[0] == 1) {
-			vpHomogeneousMatrix cMo_dem;
-			vpHomogeneousMatrix cMo_lag;
-			pose.computePose(vpPose::DEMENTHON, cMo_dem);
-			pose.computePose(vpPose::LAGRANGE, cMo_lag);
-			double residual_dem = pose.computeResidual(cMo_dem);
-			double residual_lag = pose.computeResidual(cMo_lag);
-			if (residual_dem < residual_lag)
-				cMo = cMo_dem;
-			else
-				cMo = cMo_lag;
-		}
-		pose.computePose(vpPose::VIRTUAL_VS, cMo);
+	  if (init_pose[0] == 1) {
+	    vpHomogeneousMatrix cMo_dem;
+	    vpHomogeneousMatrix cMo_lag;
+	    pose.computePose(vpPose::DEMENTHON, cMo_dem);
+	    pose.computePose(vpPose::LAGRANGE, cMo_lag);
+	    double residual_dem = pose.computeResidual(cMo_dem);
+	    double residual_lag = pose.computeResidual(cMo_lag);
+	    if (residual_dem < residual_lag)
+	      cMo = cMo_dem;
+	    else
+	      cMo = cMo_lag;
+	  }
+	  pose.computePose(vpPose::VIRTUAL_VS, cMo);
 
 		vpImagePoint temp;
 		vpImagePoint temp1;
@@ -147,11 +152,10 @@ extern "C" {
 		}
 
 		// X - coordinate in pixel unit
-		//cMo_pass[3] = temp.get_i();
+		cMo_pass[3] = temp.get_i();
 		// Y - coordinate in pixel unit
-		//cMo_pass[7] = temp.get_j();
+		cMo_pass[7] = temp.get_j();
 		// Z - coordinate in pixel unit
-		//cMo_pass[11] = temp1.get_i();
-
+		cMo_pass[11] = temp1.get_i();
 	}
 }
