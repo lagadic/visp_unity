@@ -28,8 +28,13 @@ using UnityEngine;
 
 public class demo : MonoBehaviour {
 
-	// Import DLL (visp-plugin-pose-estimation.dll)
-	[DllImport("visp-plugin-pose-estimation", CallingConvention = CallingConvention.Cdecl, EntryPoint = "passFrame")]
+	// Import DLL (visp-plugin-frame.dll)
+	[DllImport("visp-plugin-frame", CallingConvention = CallingConvention.Cdecl, EntryPoint = "dot_prod")]
+	//Imported function dot_prod()
+	public static extern double dot_prod(uint[] vec);
+
+	// Import DLL (visp-plugin-frame.dll)
+	[DllImport("visp-plugin-frame", CallingConvention = CallingConvention.Cdecl, EntryPoint = "passFrame")]
 	//Imported function passFrame()
 	public static extern void passFrame(byte[] bitmap, int height, int width);
 
@@ -72,6 +77,7 @@ public class demo : MonoBehaviour {
 	public Matrix4x4 cMo_mat;
 	public Vector3 gameObjCoords;
 	public Vector3 cam_coords;
+	public uint[] vec;
 	public uint[] numOfBlobs;
 	public uint[] init_done;
 	public uint[] init_pose;
@@ -95,6 +101,7 @@ public class demo : MonoBehaviour {
 		declVars();
 		initVars();
 		initGameObj();
+		printDotProd();
 		initWebcam();
 		webcamTexture.Play();
 
@@ -209,6 +216,12 @@ public class demo : MonoBehaviour {
 
 		// init vector for passing through dot_prod()
 		vec = new uint[] {1,2,3,1,2,3};
+	}
+
+	void printDotProd()
+	{
+		Debug.Log("Dot Product of the vectors is:");
+		Debug.Log(dot_prod(vec));
 	}
 
 	void ublobTrack()
