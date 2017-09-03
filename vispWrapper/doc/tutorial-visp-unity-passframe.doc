@@ -69,7 +69,7 @@ in Unity depending on what feature we want to implement in Unity using ViSP clas
 
 Since, Unity plugins are shared library code files, which need to be imported in Unity, depending of the users, they can either compile the library
 code in Windows or Linux platforms. For compiling the library on Windows platform (MS Visual Studio & CMake) : we need to include the function
-blocks in ' extern "C" ', which is necessary to export the references to the defined functions into the DLL. Whereas for Linux platforms extern "C"
+blocks in \c extern "C", which is necessary to export the references to the defined functions into the DLL. Whereas for Linux platforms \c extern "C"
 is not required.
 
 \code
@@ -89,8 +89,8 @@ simple dot product operation on them:
 double dot_prod(unsigned int* const A){
 \endcode
 
-Similarly, in the function passFrame we pass image data as a byte array, with the frame width and height. Variable "image" is resized according to
-Unity frame dimensions. Finally, the byte array is stored as a bitmap in the global variable "image".
+Similarly, in the function passFrame we pass image data as a byte array, with the frame width and height. Variable \c image is resized according to
+Unity frame dimensions. Finally, the byte array is stored as a bitmap in the global variable \c image.
 
 \code
 void passFrame(unsigned char* const bitmap, int height, int width){
