@@ -166,4 +166,64 @@ $ make
 
 This will generate a shared library file \c visp-plugin-frame.so. Which needs to be imported in out Unity C# script.
 
+
+\subsection image_win On Windows
+
+We suppose from now, that you have created a folder (let say \c C:/ViSP/ViSP-Unity) that contains the following files: CMakeLists.txt, visp-plugin-frame.cpp. These files are also provided on this [<a href="https://github.com/lagadic/visp_unity/tree/master/vispWrapper" target="_blank">link</a>]
+
+\subsection image_win_config Configure your project
+
+- Launch CMake (cmake-gui) from Windows "Start" menu. Set the source code location as \c C:/ViSP-Plugin-Demo/vispWrapper. Here we set the build location to be \c C:/ViSP-Plugin-Demo/vispWrapper-build.
+
+\image html img-started-win-cmake-1.jpg
+
+- Press "Configure" button, and select your compiler. In our case we will use Visual Studio 14 Win64. Press then "Finish". The configuration is now under progress and should lead to the following image.
+
+\image html img-started-win-cmake-2.jpg
+
+- Note here that CMake has automatically found the location of ViSP install folder; \c C:/ViSP/ViSP-install.
+
+- Press then "Configure" button to remove the red lines, and then "Generate" button. As presented in the following image, all the red lines should disappear.
+
+\image html img-started-win-cmake-3.jpg
+
+- From now, in \c C:/ViSP-Plugin-Demo/vispWrapper-build you should have \c VISP_WRAPPER.sln Visual Studio solution file.
+
+\subsection image_win_build Generate the DLL file
+
+- To open the project in Visual Studio C++ just double click on \c C:/ViSP-Plugin-Demo/vispWrapper-build/VISP_WRAPPER.sln solution file.
+
+\image html img-started-win-msvc-1.jpg
+
+- Now to build the solution, enter "BUILD/Build Solution" menu.
+
+\image html img-started-win-msvc-2.jpg
+
+- In \c C:/ViSP-Plugin-Demo/vispWrapper-build/Debug folder you have now \c visp-plugin-frame.dll executable.
+
+\section unity_import Importing in Unity
+Now that we have compiled our shared library, \c visp-plugin-frame.so / \c visp-plugin-frame.dll. For importing functions in the Unity Script,
+we just have to include the library file in our Unity project's \c  /Assets/plugins folder. If a \c plugins folder doesn't exist in your Project/Assets folder,
+simply create one, followed by including the library file in it.
+
+\subsection unity_script Calling Convention in Unity.
+Now we will import the functions in our Unity script \c demo.cs. Following is the code for doing this:
+
+\code
+// Import DLL (visp-plugin-frame.dll)
+[DllImport("visp-plugin-frame", CallingConvention = CallingConvention.Cdecl, EntryPoint = "dot_prod")]
+//Imported function dot_prod()
+public static extern double dot_prod(uint[] vec);
+
+// Import DLL (visp-plugin-frame.dll)
+[DllImport("visp-plugin-frame", CallingConvention = CallingConvention.Cdecl, EntryPoint = "passFrame")]
+//Imported function passFrame()
+public static extern void passFrame(byte[] bitmap, int height, int width);
+\endcode
+
+\note You can find the entire code for the C# Unity script <a href="https://github.com/lagadic/visp_unity/blob/master/unityProject/Assets/demo.cs" target="_blank">here</a>.
+
+\section image_next Next tutorial
+In the next tutorial we deal with pose estimation in Unity using ViSP libraries. You are now ready to goto \ref tutorial-visp-unity-pose-estimate.
+
 */
