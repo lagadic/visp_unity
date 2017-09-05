@@ -169,17 +169,15 @@ This will generate a shared library file \c visp-plugin-frame.so. Which needs to
 
 \subsection image_win On Windows
 
-We suppose from now, that you have created a folder (let say \c C:/ViSP/ViSP-Unity) that contains the following files: CMakeLists.txt, visp-plugin-frame.cpp. These files are also provided on this [<a href="https://github.com/lagadic/visp_unity/tree/master/vispWrapper" target="_blank">link</a>]
+We suppose from now, that you have created a folder (let say \c C:/ViSP-Plugin-Demo/vispWrapper-source) that contains the following files: CMakeLists.txt, visp-plugin-frame.cpp. These files are also provided on this [<a href="https://github.com/lagadic/visp_unity/tree/master/vispWrapper" target="_blank">link</a>]
 
 \subsection image_win_config Configure your project
 
-- Launch CMake (cmake-gui) from Windows "Start" menu. Set the source code location as \c C:/ViSP-Plugin-Demo/vispWrapper. Here we set the build location to be \c C:/ViSP-Plugin-Demo/vispWrapper-build.
+- Launch CMake (cmake-gui) from Windows "Start" menu. Set the source code location as \c C:/ViSP-Plugin-Demo/vispWrapper-source. Here we set the build location to be \c C:/ViSP-Plugin-Demo/vispWrapper-build.
 
 \image html img-started-win-cmake-1.jpg
 
-- Press "Configure" button, and select your compiler. In our case we will use Visual Studio 14 Win64. Press then "Finish". The configuration is now under progress and should lead to the following image.
-
-\image html img-started-win-cmake-2.jpg
+- Press "Configure" button, and select your compiler. In our case we will use Visual Studio 14 Win64. Press then "Finish".
 
 - Note here that CMake has automatically found the location of ViSP install folder; \c C:/ViSP/ViSP-install.
 
