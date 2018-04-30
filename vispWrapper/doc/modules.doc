@@ -1,8 +1,0 @@
-/*******************************************
- * Module visp wrapper
- *******************************************/
-/*!
-  \defgroup module_visp_wrapper Visp wrapper
-  Main wrapping module content.
-*/
-
