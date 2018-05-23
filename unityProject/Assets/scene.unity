@@ -205,7 +205,7 @@ GameObject:
   - component: {fileID: 1063809649}
   - component: {fileID: 1063809648}
   - component: {fileID: 1063809647}
-  - component: {fileID: 1063809651}
+  - component: {fileID: 1063809646}
   m_Layer: 0
   m_Name: Plane
   m_TagString: Untagged
@@ -213,6 +213,17 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &1063809646
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1063809645}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4dc75542744419449887ee9d1e67e6bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!23 &1063809647
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -281,17 +292,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
---- !u!114 &1063809651
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1063809645}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f3ad72b2930213444a6d77f799db2c62, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1533144824
 GameObject:
   m_ObjectHideFlags: 0
