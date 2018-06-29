@@ -17,8 +17,8 @@ extern "C" {
 	double* w = new double[1];
 	double* apr = new double[6];
 
-	void AprilTagFunctionsCombined(unsigned char* const bitmap, int height, int width, double* array, double* arrayU, double* arrayV, double *arrayT, double* h, double* w, double* apr) {
-		cam.initPersProjWithoutDistortion(1131.561907, 1085.157822, 588.2376812, 191.1328903);
+	void AprilTagFunctionsCombined(unsigned char* const bitmap, int height, int width, double cam_px, double cam_py, double cam_u0, double cam_v0, double* array, double* arrayU, double* arrayV, double *arrayT, double* h, double* w, double* apr) {
+		cam.initPersProjWithoutDistortion(cam_px, cam_py, cam_u0, cam_v0);
 		//The following loop flips the bitmap
 		for (int r = 0; r < height; r++) {
 			for (int c = 0; c < width / 2; c++) {

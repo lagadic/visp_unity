@@ -24,5 +24,5 @@
 
 using namespace std;
 extern "C" {
-	TESTDLL_API void AprilTagFunctionsCombined(unsigned char* const bitmap, int height, int width, double* array, double* arrayU, double* arrayV, double *arrayT, double* h, double* w, double* apr);
+	TESTDLL_API void AprilTagFunctionsCombined(unsigned char* const bitmap, int height, int width, double cam_px, double cam_py, double cam_u0, double cam_v0, double* array, double* arrayU, double* arrayV, double *arrayT, double* h, double* w, double* apr);
 }

@@ -10,7 +10,7 @@ public class Script : MonoBehaviour
 
     // FUNCTION IMPORTED FROM DLL:
     [DllImport("ViSPUnity", CallingConvention = CallingConvention.Cdecl, EntryPoint = "AprilTagFunctionsCombined")]
-    public static extern void AprilTagFunctionsCombined(byte[] bitmap, int height, int width, double[] coord, double[] U, double[] V, double[] T, double[] h, double[] w, double[] apr);
+    public static extern void AprilTagFunctionsCombined(byte[] bitmap, int height, int width, double cam_px, double cam_py, double cam_u0, double cam_v0, double[] coord, double[] U, double[] V, double[] T, double[] h, double[] w, double[] apr);
 
     //For storing U, V and T vectors
     double[] U = new double[4];
@@ -32,6 +32,11 @@ public class Script : MonoBehaviour
     public int X = 640;   // for example 640
     public int Y = 480;   // for example 480
 
+    [Header("Enter your Camera Parameters here")]
+    public double cam_px = 1131.561907;
+    public double cam_py = 1085.157822;
+    public double cam_u0 = 588.2376812;
+    public double cam_v0 = 191.1328903;
 
     void Start()
     {
@@ -47,7 +52,7 @@ public class Script : MonoBehaviour
 
     void Update()
     {
-        AprilTagFunctionsCombined(Color32ArrayToByteArray(wct.GetPixels32()), wct.height, wct.width, coord, U, V, T, h, w, apr);
+        AprilTagFunctionsCombined(Color32ArrayToByteArray(wct.GetPixels32()), wct.height, wct.width, cam_px, cam_py, cam_u0, cam_v0, coord, U, V, T, h, w, apr);
 
         double x = (float)13.333 / X * coord[2] - 13.33 / 2;
         double y = (float)10 / Y * coord[0] - 10 / 2;
