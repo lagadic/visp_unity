@@ -20,17 +20,9 @@
 #include <visp3/io/vpImageIo.h>
 #include <visp3/core/vpPoseVector.h>
 #include <visp3/core/vpRect.h>
-
+#include <visp3/core/vpPolygon.h>
 
 using namespace std;
 extern "C" {
-	TESTDLL_API bool ApriltagDetect(unsigned char* const bitmap, int height, int width);
-	TESTDLL_API double GetHorizontalAngle();
-	TESTDLL_API double GetVerticalAngle();
-	TESTDLL_API void CenterCoord(unsigned char* const bitmap, int height, int width, double* array);
-	TESTDLL_API void ApriltagPoseHomogenous(unsigned char* const bitmap, int height, int width, double* arrayU, double* arrayV, double *arrayT);
-
-	TESTDLL_API void ApriltagPoseTheta(unsigned char* const bitmap, int height, int width, double* array);
-	TESTDLL_API void ApriltagPoseTranslation(unsigned char* const bitmap, int height, int width, double* array);
-
+	TESTDLL_API void AprilTagFunctionsCombined(unsigned char* const bitmap, int height, int width, double cam_px, double cam_py, double cam_u0, double cam_v0, double* array, double* arrayU, double* arrayV, double *arrayT, double* h, double* w, double* apr);
 }
