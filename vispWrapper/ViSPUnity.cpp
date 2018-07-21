@@ -56,7 +56,7 @@ extern "C" {
 		cam.initPersProjWithoutDistortion(cam_px, cam_py, cam_u0, cam_v0);
 
 		// Initialize AprilTag detector
-		// detector.set (opt_tag_family);
+		//detector.set (opt_tag_family);
 		detector.setAprilTagQuadDecimate(opt_quad_decimate);
 		detector.setAprilTagNbThreads(opt_nthreads);
 
@@ -68,7 +68,7 @@ extern "C" {
 			tracker.setTrackerType(vpMbGenericTracker::EDGE_TRACKER | vpMbGenericTracker::KLT_TRACKER);
 
 		tracker.getCameraParameters(cam);
-		// bool displayFullModel = false;
+		/*bool displayFullModel = false;*/
 
 		// edges
 		vpMe me;
@@ -111,7 +111,7 @@ extern "C" {
 	void AprilTagMBT(unsigned char* const bitmap, int height, int width, 
 		double* pointx, double* pointy, 
 		double* kltX, double* kltY, int* kltNumber, 
-		int t, int e, int* flag_state) {
+		int t, int e, int* flag_state, int *nEdges) {
 
 		//The following loop flips the bitmap
 		for (int r = 0; r < height; r++) {
@@ -126,12 +126,12 @@ extern "C" {
 
 		if (state == state_detection) {
 			state = detectAprilTag(I, detector, opt_tag_size, cam, cMo);
-			*flag_state = 0; //used in Unity for hiding the lines
+			*flag_state = 0;
 
 			// Initialize the tracker with the result of the detection
 			if (state == state_tracking) {
 				tracker.initFromPose(I, cMo);
-				*flag_state = 1; //used in Unity for showing the lines
+				*flag_state = 1;
 			}
 		}
 
@@ -144,17 +144,19 @@ extern "C" {
 				std::list<vpMbtDistanceLine *> edges;
 				tracker.getLline("Camera", edges, 0);
 				int i = 0;
-				*flag_state = 1; //used in Unity for showing the lines
-
+				*flag_state = 1;
+				//*nEdges = edges.size();
+				*nEdges = 0; // counter of the number of edges actually visible and currently tracked
 				for (std::list<vpMbtDistanceLine *>::const_iterator it = edges.begin(); it != edges.end(); ++it) {
 
-					// From the display() available here:
+					// Part of the functionality from the display() function is implemented from the following source:
 					// http://visp-doc.inria.fr/doxygen/visp-daily/vpMbtDistanceLine_8cpp_source.html
 					
 					if (e == 0) {
-						if (!(*it)->isvisible)
+						if (!(*it)->isvisible || !(*it)->isTracked()) // no difference with isTracked() 
 							continue;
 					}
+					*nEdges += 1; // increment count of number of edges that are visible and being tracked with visibility
 					vpPoint *P1 = (*it)->p1;
 					vpPoint *P2 = (*it)->p2;
 					P1->changeFrame(cMo);
@@ -183,7 +185,7 @@ extern "C" {
 						kltY[i] = kltPoints[i].get_v();
 					}
 
-					// *kltNumber = kltPoints.size(); // same as below
+					//kltNumber = kltPoints.size();
 					*kltNumber = tracker.getKltNbPoints();
 				}
 
@@ -260,6 +262,11 @@ extern "C" {
 		// Detection
 		std::vector<vpHomogeneousMatrix> cMo_v;
 		bool check = detector.detect(I, tagSize, cam, cMo_v);
+		////if (check && detector.getNbObjects() > 0) { // if tag detected, we pick the first one
+
+		//if (check) { // if tag detected, we pick the first one
+		//	cMo = cMo_v[0];
+		//}
 
 		//If the image contains aprilTag
 		if (check) {

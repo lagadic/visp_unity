@@ -8,6 +8,7 @@ using UnityEngine.UI;
 public class Script_mbt : MonoBehaviour
 {
     // FUNCTIONS IMPORTED FROM DLL:
+
     [DllImport("ViSPUnity", CallingConvention = CallingConvention.Cdecl, EntryPoint = "createCaoFile")]
     public static extern void createCaoFile(double cubeEdgeSize);
 
@@ -15,7 +16,7 @@ public class Script_mbt : MonoBehaviour
     public static extern void InitMBT(double cam_px, double cam_py, double cam_u0, double cam_v0, int t);
 
     [DllImport("ViSPUnity", CallingConvention = CallingConvention.Cdecl, EntryPoint = "AprilTagMBT")]
-    public static extern void AprilTagMBT(byte[] bitmap, int height, int width, double[] pointx, double[] pointy, double[] kltX, double[] kltY, int[] kltNumber, int t, int e, int[] flag_state);
+    public static extern void AprilTagMBT(byte[] bitmap, int height, int width, double[] pointx, double[] pointy, double[] kltX, double[] kltY, int[] kltNumber, int t, int e, int[] flag_state, int[] nEdges);
     
     WebCamTexture wct;
     Renderer rend;
@@ -38,14 +39,13 @@ public class Script_mbt : MonoBehaviour
     double[] pointy = new double[24];
     double[] kltX = new double[300];
     double[] kltY = new double[300];
-    int[] flag_state = new int[1];
+
     int[] kltNumber = new int[1];
 
     public enum tracking{
         Edge_Tracking,
         Edge_Tracking_with_KLT
     };
-
     public enum edges
     {
         Visible_Edge_tracking_only,
@@ -56,8 +56,10 @@ public class Script_mbt : MonoBehaviour
     public Script_mbt.tracking trackingMethod = tracking.Edge_Tracking;         // selected by default
     public Script_mbt.edges edgesVisibility = edges.Visible_Edge_tracking_only; // selected by default
 
-    int tr = 0;
-    int e = 0;
+    int tr = 0; // tracking method
+    int e = 0;  // view all edges
+    int[] flag_state = new int[1]; // state of ViSP tracker: detection or tracking
+    int[] nEdges = new int[1];     // number of visisble and tracked edges
 
     void Start()
     {
@@ -90,7 +92,7 @@ public class Script_mbt : MonoBehaviour
 
         //Change camera parameters in the inspector window
         InitMBT(cam_px, cam_py, cam_u0, cam_v0, tr);
-        //Debug.Log(Application.persistentDataPath);  //to be used later for loading .cao file in Android/iOS
+        //Debug.Log(Application.persistentDataPath);
     }
 
     double x1,x2;
@@ -98,31 +100,38 @@ public class Script_mbt : MonoBehaviour
 
     void Update()
     {
-        AprilTagMBT(Color32ArrayToByteArray(wct.GetPixels32()), wct.height, wct.width, pointx, pointy, kltX, kltY, kltNumber,tr, e, flag_state);
+        AprilTagMBT(Color32ArrayToByteArray(wct.GetPixels32()), wct.height, wct.width, pointx, pointy, kltX, kltY, kltNumber,tr, e, flag_state, nEdges);
         GameObject[] line = GameObject.FindGameObjectsWithTag("Line");
-
-        if (flag_state[0] == 1)
+        int maxEdges = 12;
+        if (flag_state[0] == 1) // tracking
         {
-            //Loop for all 8 points (each repeated 3 times) and draw lines:
-            for (int i = 0; i < 24; i += 2)
+            Debug.Log("nEdges = "+ nEdges[0]);
+
+            // Draw lines that are visible and tracked currently: controlled by nEdges
+            for (int i = 0; i < nEdges[0]; i++)
             {
                 //Scaling according to plane
-                x1 = -((float)(10 * aspect_ratio) / wct.width * pointx[i] - (10 * aspect_ratio) / 2);
-                x2 = -((float)(10 * aspect_ratio) / wct.width * pointx[i + 1] - (10 * aspect_ratio) / 2);
-                y1 = -((float)10 / wct.height * pointy[i] - 10 / 2);
-                y2 = -((float)10 / wct.height * pointy[i + 1] - 10 / 2);
+                x1 = -((float)(10 * aspect_ratio) / wct.width * pointx[2 * i] - (10 * aspect_ratio) / 2);
+                x2 = -((float)(10 * aspect_ratio) / wct.width * pointx[2 * i + 1] - (10 * aspect_ratio) / 2);
+                y1 = -((float)10 / wct.height * pointy[2 * i] - 10 / 2);
+                y2 = -((float)10 / wct.height * pointy[2 * i + 1] - 10 / 2);
 
-                Debug.Log(flag_state[0] + " " + i);
                 //Draw lines
-                line[i / 2].GetComponent<LineRenderer>().SetPosition(0, new Vector3((float)x1, (float)y1, -9f));
-                line[i / 2].GetComponent<LineRenderer>().SetPosition(1, new Vector3((float)x2, (float)y2, -9f));
+                line[i].GetComponent<LineRenderer>().SetPosition(0, new Vector3((float)x1, (float)y1, -9f));
+                line[i].GetComponent<LineRenderer>().SetPosition(1, new Vector3((float)x2, (float)y2, -9f));
 
                 //Following line is for debugging purpose only: shows lines only in the 'Scene' view, not in 'Game' view:    
                 Debug.DrawLine(new Vector3((float)x1, (float)y1, -19f), new Vector3((float)x2, (float)y2, -19f));
             }
+            // Remove edges that are not visible and tracked currently
+            for (int i = nEdges[0]; i < maxEdges; i++)
+            {
+                //Remove lines
+                line[i].GetComponent<LineRenderer>().SetPosition(0, new Vector3(0, 0, 0));
+                line[i].GetComponent<LineRenderer>().SetPosition(1, new Vector3(0, 0, 0));
+            }
         }
-        //When aprilTag is not detected, hide the lines:
-        else
+        else //When aprilTag is not detected: Remove all edges
         {
             for (int i = 0; i < 12; i++)
             {
@@ -133,11 +142,11 @@ public class Script_mbt : MonoBehaviour
         }
 
         // Testing KLT in Unity:
-        if (tr==1)
-            Debug.Log("Num of KLT Feature Points:" + kltNumber[0]);
+        //if (tr==1)
+        //    Debug.Log("Num of KLT Feature Points:" + kltNumber[0]);
         
-        if(tr==0)
-            Debug.Log("Edge Tracking");
+        //if(tr==0)
+        //    Debug.Log("Edge Tracking");
 
         //For showing the KLT feature points:
 
@@ -145,7 +154,7 @@ public class Script_mbt : MonoBehaviour
         //    GameObject s = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         //    s.tag = "kltPoint";
         //    s.transform.localScale = new Vector3(1, 1, 1);
-        //    x1 = -((float)(10 * aspect_ratio) / X * kltX[i] * 2 - (10 * aspect_ratio)/ 2);
+        //    x1 = -((float)13.33 / X * kltX[i] * 2 - 13.33 / 2);
         //    y1 = -((float)10 / Y * kltY[i] * 2 - 10 / 2);
         //    s.transform.localPosition = new Vector3((float)x1, (float) x2, -20f);
         //}
