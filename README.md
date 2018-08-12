@@ -14,4 +14,4 @@
 * Check the video demonstration on YouTube: https://www.youtube.com/watch?v=birCXp_yS6k
 
 
-Check Wiki of repository for more details about the project: implementation, tutorial on building using Visual Studio and running demo on Unity.  
+Check Wiki of repository for more details about the project: implementation, tutorial on building using Visual Studio and running demo on Unity. UnityPackage file is also available, which can be imported into any Unity Project (Assets -> Import Package -> Custom Package...)
