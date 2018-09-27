@@ -6,6 +6,7 @@
 * Pose estimation is done using AprilTag.
 * User can set the camera parameters, tracker type and select visibility of edges.
 * Check the video demonstration on YouTube: https://www.youtube.com/watch?v=uBRZQMREi-E
+* NOTE: The lines visibility issue was solved after the above video was made.
 
 ### Augmented Reality in Unity using ViSP:
 
