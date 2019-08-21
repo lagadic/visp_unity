@@ -45,8 +45,8 @@ public class Script_ar : MonoBehaviour
 
     void Start()
     {
-        wct = new WebCamTexture();
-        //wct = new WebCamTexture(WebCamTexture.devices[0].name, 640, 480, 30);
+        //wct = new WebCamTexture();
+        wct = new WebCamTexture(WebCamTexture.devices[1].name, 640, 480, 30);
 
         rend = GetComponent<Renderer>();
         rend.material.mainTexture = wct;
