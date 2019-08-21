@@ -26,7 +26,8 @@ extern "C" {
 		double cam_px, double cam_py, 
 		double cam_u0, double cam_v0, 
 		double* array, 
-		double* arrayU, double* arrayV, double *arrayT, 
+		double* arrayU, double* arrayV, double* arrayW, double *arrayT,
 		double* h, double* w, 
-		double* apr);
+		double* apr,
+		int* tag_id);
 }

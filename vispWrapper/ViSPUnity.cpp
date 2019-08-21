@@ -8,13 +8,17 @@ extern "C" {
 	vpCameraParameters cam;
 	vpMbGenericTracker tracker;
 
-	vpArray2D<double> v, u, t;
+	vpArray2D<double> v, u, ww, t;
 	double* theta = new double[3];
 	double* translation = new double[3];
 	double* h = new double[1];
 	double* w = new double[1];
 	double* apr = new double[6];
-	double tagSize = 0.053;
+	//double tagSize = 0.053;
+	//double tagSize = 0.06;
+	//double tagSize = 0.04;
+	double tagSize = 0.076;
+	
 	int* flag_state = new int[1];
 
 	typedef enum {
@@ -27,6 +31,7 @@ extern "C" {
 
 	int opt_device = 0;
 	vpDetectorAprilTag::vpAprilTagFamily opt_tag_family = vpDetectorAprilTag::TAG_36h11;
+	vpDetectorAprilTag::vpPoseEstimationMethod pose_est_meth = vpDetectorAprilTag::vpPoseEstimationMethod::BEST_RESIDUAL_VIRTUAL_VS;
 
 	double opt_tag_size = 0.08;
 	float opt_quad_decimate = 1.0;
@@ -59,6 +64,7 @@ extern "C" {
 		//detector.set (opt_tag_family);
 		detector.setAprilTagQuadDecimate(opt_quad_decimate);
 		detector.setAprilTagNbThreads(opt_nthreads);
+		detector.setAprilTagPoseEstimationMethod(pose_est_meth);
 
 		// Prepare MBT
 		if (t == 0)
@@ -242,12 +248,12 @@ extern "C" {
 		fileStream.close();
 	}
 
-	void AprilTagFunctionsCombined(unsigned char* const bitmap, int height, int width, 
-		double cam_px, double cam_py, double cam_u0, double cam_v0, 
-		double* array, double* arrayU, double* arrayV, double *arrayT, 
-		double* h, double* w, double* apr) {
+	void AprilTagFunctionsCombined(unsigned char* const bitmap, int height, int width,
+		double cam_px, double cam_py, double cam_u0, double cam_v0,
+		double* array, double* arrayU, double* arrayV, double* arrayW, double *arrayT,
+		double* h, double* w, double* apr, int* tag_id) {
 
-		cam.initPersProjWithoutDistortion(cam_px, cam_py, cam_u0, cam_v0);
+		cam.initPersProjWithoutDistortion(cam_px, cam_py, cam_u0, cam_v0);	
 		//The following loop flips the bitmap
 		for (int r = 0; r < height; r++) {
 			for (int c = 0; c < width / 2; c++) {
@@ -270,6 +276,15 @@ extern "C" {
 
 		//If the image contains aprilTag
 		if (check) {
+
+			std::string message = detector.getMessage(0);
+			std::cout << message;
+			std::size_t tag_id_pos = message.find("id: ");
+			int id = -1;
+			if (tag_id_pos != std::string::npos) {
+				id = atoi(message.substr(tag_id_pos + 4).c_str());
+			}
+			tag_id[0] = id;
 
 			//COORDINATES OF APRILTAG
 			vpRect bbox = detector.getBBox(0);
@@ -303,12 +318,14 @@ extern "C" {
 			//ROTATION OF APRILTAG
 			u = cMo_v[0].getCol(0);
 			v = cMo_v[0].getCol(1);
+			ww = cMo_v[0].getCol(2);
 			t = cMo_v[0].getCol(3);
 
 			for (size_t i = 0; i < u.size(); i++)
 			{
 				arrayU[i] = u.data[i];
 				arrayV[i] = v.data[i];
+				arrayW[i] = ww.data[i];
 				arrayT[i] = t.data[i];
 			}
 		}
@@ -321,7 +338,11 @@ extern "C" {
 
 			arrayU = 0;
 			arrayV = 0;
+			arrayW = 0;
 			arrayT = 0;
+			
 		}
 	}
+
+
 }
