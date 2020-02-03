@@ -17,7 +17,7 @@ extern "C" {
 	//double tagSize = 0.053;
 	//double tagSize = 0.06;
 	//double tagSize = 0.04;
-	double tagSize = 0.076;
+	//double tagSize = 0.076;
 	
 	int* flag_state = new int[1];
 
@@ -249,7 +249,7 @@ extern "C" {
 	}
 
 	void AprilTagFunctionsCombined(unsigned char* const bitmap, int height, int width,
-		double cam_px, double cam_py, double cam_u0, double cam_v0,
+		double cam_px, double cam_py, double cam_u0, double cam_v0, double tagSize,
 		double* array, double* arrayU, double* arrayV, double* arrayW, double *arrayT,
 		double* h, double* w, double* apr, int* tag_id) {
 
