@@ -12,6 +12,7 @@
 #include <sstream>
 #include <fstream>
 #include <ios>
+#include "System.h"
 
 using namespace std;
 extern "C" {
