@@ -13,6 +13,8 @@
 #include <fstream>
 #include <ios>
 #include "System.h"
+#include <math.h>
+
 
 using namespace std;
 extern "C" {
@@ -25,10 +27,27 @@ extern "C" {
 	VISP_EXPORT void InitMBT(double cam_px, double cam_py, double cam_u0, double cam_v0, int t);
 	VISP_EXPORT void AprilTagFunctionsCombined(unsigned char* const bitmap, int height, int width, 
 		double cam_px, double cam_py, 
-		double cam_u0, double cam_v0, 
+		double cam_u0, double cam_v0,
+		double tagSize,
 		double* array, 
 		double* arrayU, double* arrayV, double* arrayW, double *arrayT,
 		double* h, double* w, 
 		double* apr,
-		int* tag_id);
+		int* tag_id,
+		int* IsDetected);
+
+
+	VISP_EXPORT void SlamInit();
+
+
+
+	VISP_EXPORT void TagInitThenSLAM(unsigned char* const bitmap, int height, int width,
+		double cam_px, double cam_py, double cam_u0, double cam_v0, double tagSize,
+		double* array, double* arrayU, double* arrayV, double* arrayW, double *arrayT,
+		double* h, double* w, double* apr, int* tag_id, int* IsDetected, double* Distance, int frame_count);
+
+	unsigned char* const FlipBitmap(unsigned char* const bitmap, int height, int width);
+	cv::Mat& SlamForVispUnity(int frame_count, int height, int width);
+	
+
 }

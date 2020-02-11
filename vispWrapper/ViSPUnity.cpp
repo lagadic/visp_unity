@@ -2,8 +2,13 @@
 
 extern "C" {
 
+	ORB_SLAM2::System* SLAM;
+
+
+
 	vpImage<unsigned char> I;
-	vpDetectorAprilTag detector(vpDetectorAprilTag::TAG_36h11);
+	vpImage<unsigned char> Img;//for slam
+	vpDetectorAprilTag detector(vpDetectorAprilTag::TAG_36h11);   //TAG_36h11
 	vpHomogeneousMatrix cMo;
 	vpCameraParameters cam;
 	vpMbGenericTracker tracker;
@@ -14,12 +19,20 @@ extern "C" {
 	double* h = new double[1];
 	double* w = new double[1];
 	double* apr = new double[6];
+	bool SlamFirstTimeInit = true;
+	bool IsSlamReset = true;
+	bool IsSlamInit = false;
+	cv::Mat SlamPose;
 	//double tagSize = 0.053;
 	//double tagSize = 0.06;
 	//double tagSize = 0.04;
 	//double tagSize = 0.076;
+	//double tagSize = 0.0375;
 	
 	int* flag_state = new int[1];
+
+	// Create SLAM system. It initializes all system threads and gets ready to process frames.
+	//ORB_SLAM2::System SLAM("ORBvoc\\ORBvoc.txt", "Logitech.yaml", ORB_SLAM2::System::MONOCULAR, true, 0.278f);
 
 	typedef enum {
 		state_detection,
@@ -251,23 +264,19 @@ extern "C" {
 	void AprilTagFunctionsCombined(unsigned char* const bitmap, int height, int width,
 		double cam_px, double cam_py, double cam_u0, double cam_v0, double tagSize,
 		double* array, double* arrayU, double* arrayV, double* arrayW, double *arrayT,
-		double* h, double* w, double* apr, int* tag_id) {
+		double* h, double* w, double* apr, int* tag_id, int* IsDetected) {
 
-		cam.initPersProjWithoutDistortion(cam_px, cam_py, cam_u0, cam_v0);	
-		//The following loop flips the bitmap
-		for (int r = 0; r < height; r++) {
-			for (int c = 0; c < width / 2; c++) {
-				unsigned char temp = bitmap[r*width + c];
-				bitmap[r*width + c] = bitmap[r*width + width - c - 1];
-				bitmap[r*width + width - c - 1] = temp;
-			}
-		}
+		cam.initPersProjWithoutDistortion(cam_px, cam_py, cam_u0, cam_v0);
+
 		I.resize(height, width);
-		I.bitmap = bitmap;
+		//The following loop flips the bitmap
+		I.bitmap = FlipBitmap(bitmap, height, width);
+		
 
 		// Detection
 		std::vector<vpHomogeneousMatrix> cMo_v;
 		bool check = detector.detect(I, tagSize, cam, cMo_v);
+		IsDetected[0] = (int)check;
 		////if (check && detector.getNbObjects() > 0) { // if tag detected, we pick the first one
 
 		//if (check) { // if tag detected, we pick the first one
@@ -288,7 +297,8 @@ extern "C" {
 
 			//COORDINATES OF APRILTAG
 			vpRect bbox = detector.getBBox(0);
-			double* coord = new double[4];
+			//double* coord = new double[4];
+			std::unique_ptr<double[]> coord = std::make_unique<double[]>(4);
 			vpImagePoint X = bbox.getCenter();
 			coord[0] = X.get_i();
 			coord[1] = X.get_j();
@@ -326,8 +336,9 @@ extern "C" {
 				arrayU[i] = u.data[i];
 				arrayV[i] = v.data[i];
 				arrayW[i] = ww.data[i];
-				arrayT[i] = t.data[i];
+				arrayT[i] = t.data[i]; 
 			}
+
 		}
 
 		else {
@@ -342,6 +353,217 @@ extern "C" {
 			arrayT = 0;
 			
 		}
+	}
+
+	void TagInitThenSLAM(unsigned char* const bitmap, int height, int width,
+		double cam_px, double cam_py, double cam_u0, double cam_v0, double tagSize,
+		double* array, double* arrayU, double* arrayV, double* arrayW, double *arrayT,
+		double* h, double* w, double* apr, int* tag_id, int* IsDetected, double* Distance, int frame_count) {
+
+		cam.initPersProjWithoutDistortion(cam_px, cam_py, cam_u0, cam_v0);
+
+		I.resize(height, width);
+		//The following loop flips the bitmap
+		I.bitmap = FlipBitmap(bitmap, height, width);
+
+
+		// Detection
+		std::vector<vpHomogeneousMatrix> cMo_v;
+		bool check = detector.detect(I, tagSize, cam, cMo_v);
+		IsDetected[0] = (int)check;
+		////if (check && detector.getNbObjects() > 0) { // if tag detected, we pick the first one
+
+		//if (check) { // if tag detected, we pick the first one
+		//	cMo = cMo_v[0];
+		//}
+
+		//If the image contains aprilTag
+		if (check) {
+
+			std::string message = detector.getMessage(0);
+			std::cout << message;
+			std::size_t tag_id_pos = message.find("id: ");
+			int id = -1;
+			if (tag_id_pos != std::string::npos) {
+				id = atoi(message.substr(tag_id_pos + 4).c_str());
+			}
+			tag_id[0] = id;
+
+			//COORDINATES OF APRILTAG
+			vpRect bbox = detector.getBBox(0);
+			//double* coord = new double[4];
+			std::unique_ptr<double[]> coord = std::make_unique<double[]>(4);
+			vpImagePoint X = bbox.getCenter();
+			coord[0] = X.get_i();
+			coord[1] = X.get_j();
+			coord[2] = X.get_u();
+			coord[3] = X.get_v();
+			for (size_t i = 0; i < 3; i++)
+			{
+				array[i] = coord[i];
+			}
+
+			//SIZE OF BOUNDING-BOX
+			//vpRect bbox = detector.getBBox(0);
+			h[0] = bbox.getHeight();
+			w[0] = bbox.getWidth();
+
+			//SIZE OF POLYGON
+			vpPolygon polygon(detector.getPolygon(0));
+
+			vector <vpImagePoint> corners = polygon.getCorners();
+			apr[0] = vpImagePoint::distance(corners[0], corners[1]); // side1
+			apr[1] = vpImagePoint::distance(corners[1], corners[2]); // side2
+			apr[2] = vpImagePoint::distance(corners[2], corners[3]); // side3
+			apr[3] = vpImagePoint::distance(corners[3], corners[0]); // side4
+			apr[4] = vpImagePoint::distance(corners[0], corners[2]); // diagonal1
+			apr[5] = vpImagePoint::distance(corners[1], corners[3]); // diagonal2
+
+			//ROTATION OF APRILTAG
+			u = cMo_v[0].getCol(0);
+			v = cMo_v[0].getCol(1);
+			ww = cMo_v[0].getCol(2);
+			t = cMo_v[0].getCol(3);
+
+			for (size_t i = 0; i < u.size(); i++)
+			{
+				arrayU[i] = u.data[i];
+				arrayV[i] = v.data[i];
+				arrayW[i] = ww.data[i];
+				arrayT[i] = t.data[i]; 
+			}
+
+
+			double DistanceToTag = sqrt(pow(arrayT[0], 2) + pow(arrayT[1], 2) + pow(arrayT[2], 2));
+			Distance[0] = DistanceToTag;
+
+			if (SlamFirstTimeInit) {
+
+				SlamPose = SlamForVispUnity(frame_count, height, width);
+				IsSlamReset = false;
+				
+				if (!SlamPose.empty()) {
+
+					SlamFirstTimeInit = false;
+
+				}
+				
+			}
+
+		    if (DistanceToTag < 0.3 && !IsSlamInit) {
+
+				if (!IsSlamReset) {
+			       
+					SLAM->Reset(DistanceToTag,"Min");
+					IsSlamReset = true;
+				}
+
+				SlamPose = SlamForVispUnity(frame_count, height, width);
+				SlamFirstTimeInit = false;
+				
+
+				if (!SlamPose.empty()) {
+
+					IsSlamInit = true;
+				}
+			}
+			else {
+
+				SlamPose = SlamForVispUnity(frame_count, height, width);
+
+				if (DistanceToTag > 0.3) {
+
+					IsSlamInit = false;
+					IsSlamReset = false;
+				}
+				
+			}
+			
+		}
+
+		else {
+			array = 0;
+
+			h[0] = -1;
+			w[0] = -1;
+
+			arrayU = 0;
+			arrayV = 0;
+			arrayW = 0;
+			arrayT = 0;
+			
+			SlamForVispUnity(frame_count, height, width);
+		}
+	}
+
+
+	void SlamInit() {
+
+		SLAM = new ORB_SLAM2::System("G:\\rosyth_desktopdockyard\\Assets\\ORBvoc\\ORBvoc.bin", "G:\\rosyth_desktopdockyard\\Assets\\Logitech.yaml", ORB_SLAM2::System::MONOCULAR, true, 0.278f, "Min");
+		SLAM->Reset();
+				
+	}
+
+   
+	cv::Mat& SlamForVispUnity(int frame_count_tracking,int height, int width) {
+
+		bool check = true;
+		cv::Mat vid_frame;
+
+		vpImageConvert::convert(I, vid_frame);
+
+
+		cv::Mat slam_pose;
+
+		slam_pose = SLAM->TrackMonocular(vid_frame, frame_count_tracking);
+
+		if (slam_pose.empty()) {
+			check = false;
+		}
+
+		return slam_pose;
+	}
+
+
+	unsigned char* const FlipBitmap(unsigned char* const bitmap, int height, int width) {
+
+		for (int r = 0; r < height; r++) {
+			for (int c = 0; c < width / 2; c++) {
+				unsigned char temp = bitmap[r*width + c];
+				bitmap[r*width + c] = bitmap[r*width + width - c - 1];
+				bitmap[r*width + width - c - 1] = temp;
+			}
+		}
+		
+		return bitmap;
+
+	}
+	
+
+	int Mat2ViSP(const cv::Mat& mat_in, vpHomogeneousMatrix& visp_ou)
+	{
+		int ret = 0;
+
+		if (mat_in.type() != CV_32FC1) // && mat_in.type() != CV_64FC1) 
+		//if (mat_in.type() != CV_64FC1)
+		{
+			//std::cout << "[HandEyeCalib] Mat input is not floating-point number!" << std::endl;
+			std::cout << "Mat input is not floating-point number! It's " << mat_in.type() << std::endl;
+			ret = 1;
+			return ret;
+		}
+
+		std::cout << "Mat input ok" << std::endl;
+
+		for (int i = 0; i < mat_in.rows; i++)
+		{
+			for (int j = 0; j < mat_in.cols; j++)
+			{
+				visp_ou[i][j] = mat_in.ptr<float>(i)[j];  // new memory is created and data is copied in this line
+			}
+		}
+
+		return ret;
 	}
 
 
