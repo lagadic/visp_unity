@@ -20,7 +20,7 @@
 
 using namespace std;
 extern "C" {
-	TESTDLL_API void SlamShutdown();
+	TESTDLL_API void Shutdown();
 	TESTDLL_API void Init(const char* path_to_vocab, const char* path_to_cam_params, const int bitmap_height, const int bitmap_width);
 
 	TESTDLL_API void PoseFromAprilTag(unsigned char* const bitmap,
@@ -48,7 +48,7 @@ extern "C" {
 												double* tag_bb_height, double* tag_bb_width,
 												double* tag_dimensions,
 												int* tag_id,
-												int* is_tag_detected, double* distance);
+												int* is_tag_detected, double* distance, int* slam_tracking_state);
 
 	vpHomogeneousMatrix PoseFromAprilTag_cMo(unsigned char* const bitmap,
 												int bitmap_height, int bitmap_width,

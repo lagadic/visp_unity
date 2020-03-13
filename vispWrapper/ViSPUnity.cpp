@@ -16,7 +16,7 @@ extern "C" {
 	std::string path_to_slam_vocab = " ";
 	std::string path_to_camera_params = "";
 	
-	void SlamShutdown()
+	void Shutdown()
 	{
 		if (pSlam != NULL)
 		{
@@ -191,7 +191,8 @@ extern "C" {
 								  double* tag_dimensions,
 								  int* tag_id, 
 								  int* is_tag_detected,
-		                          double* distance) 
+		                          double* distance,
+								  int* slam_tracking_state) 
 	{
 		
 		vpHomogeneousMatrix cMo_tag = PoseFromAprilTag_cMo(bitmap,
@@ -208,6 +209,8 @@ extern "C" {
 														is_tag_detected);
 
 		float distance_to_tag = std::numeric_limits<float>::max();
+		slam_tracking_state[0] = 0;
+
 		if (is_tag_detected[0] == 1)
 		{
 			distance_to_tag = sqrt(pow(camera_pose_T[0], 2) + pow(camera_pose_T[1], 2) + pow(camera_pose_T[2], 2));
@@ -243,6 +246,7 @@ extern "C" {
 			++frame_count_since_slam_init;
 			last_distance_to_tag = distance_to_tag;
 			is_slam_tracking = false;
+			slam_tracking_state[0] = 0;
 			return;
 		}
 		
@@ -267,6 +271,7 @@ extern "C" {
 			if (distance_to_tag < distance_to_tag_to_reinit) // close to tag and tag found. prefer tag pose to slam pose.
 			{
 				return;
+				slam_tracking_state[0] = 0;
 			}
 			
 			vpHomogeneousMatrix cMo_slam;
@@ -287,10 +292,13 @@ extern "C" {
 				camera_pose_W[i] = col_w.data[i];
 				camera_pose_T[i] = col_t.data[i];
 			}
+
+			slam_tracking_state[0] = 1;
 		}
 		else
 		{
 			cMo_last = cMo_tag;
+			slam_tracking_state[0] = 0;
 		}
 			
 		return;
@@ -350,8 +358,8 @@ extern "C" {
 
 		pI = new vpImage<unsigned char>();
 		pI->init(bitmap_height, bitmap_width);
-		pDisplay = new vpDisplayGDI();
-		pDisplay->init(*pI, 150, 150, "Tag tracker");
+		//pDisplay = new vpDisplayGDI();
+		//pDisplay->init(*pI, 150, 150, "Tag tracker");
 		
 		pTag_detector = new vpDetectorAprilTag(vpDetectorAprilTag::TAG_36h11);
 		pTag_detector->setDisplayTag(true);
