@@ -249,6 +249,7 @@ extern "C" {
 			slam_tracking_state[0] = 0;
 			return;
 		}
+
 		
 		last_distance_to_tag = distance_to_tag;
 
@@ -259,6 +260,9 @@ extern "C" {
 
 		cv::Mat slam_pose = PoseFromSlam(frame_count_since_slam_init);
 		++frame_count_since_slam_init;
+
+	
+
 		if (!slam_pose.empty())
 		{
 			if (!is_slam_tracking)
@@ -273,7 +277,12 @@ extern "C" {
 				return;
 				slam_tracking_state[0] = 0;
 			}
+
+			slam_tracking_state[0] = 1;
 			
+			if (is_tag_detected[0] == 1)
+				return;
+
 			vpHomogeneousMatrix cMo_slam;
 			Mat2ViSP(slam_pose, cMo_slam);
 
@@ -293,7 +302,7 @@ extern "C" {
 				camera_pose_T[i] = col_t.data[i];
 			}
 
-			slam_tracking_state[0] = 1;
+			
 		}
 		else
 		{
