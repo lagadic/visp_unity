@@ -1,18 +1,27 @@
-## Developement of an interface and demo between ViSP and Unity engine
+## Developement of a wrapper between ViSP and Unity engine
 
-### Model Based Tracking in Unity using ViSP:
+### Introduction
 
-* Available in the scene_mbt.unity in Scenes folder of unityProject.
-* Pose estimation is done using AprilTag.
-* User can set the camera parameters, tracker type and select visibility of edges.
-* Check the video demonstration on YouTube: https://www.youtube.com/watch?v=uBRZQMREi-E
-* NOTE: The lines visibility issue was solved after the above video was made.
+This project contains:
+- a C++ wrapper between ViSP and Unity. This wrapper available in `vispWrapper` folder needs to be linked with [ViSP](https://visp.inria.fr).
+- a Unity project available in `unityProject` folder that shows how to use this wrapper to build a demo to illustrate:
+  - augmented reality displaying a virtual cube over an AprilTag
+  - generic model-based tracking of a cube with an AprilTag glued on one cube face.
 
-### Augmented Reality in Unity using ViSP:
+This project is compatible with Ubuntu, MacOS and Windows platforms.
 
-* Available in the scene_ar.unity in Scenes folder of unityProject.
-* Detection, translation and rotation of object (cube) is done according to position and pose of AprilTag.
-* Check the video demonstration on YouTube: https://www.youtube.com/watch?v=birCXp_yS6k
+### Augmented Reality in Unity using ViSP
 
+* The corresponding Unity scene is available in `unityProject/Assets/Scenes/scene_ar.unity`.
+* On each new image AprilTag is detected and localized in 3D.
+* A virtual red cube is projected in the scene over the tag thanks to the tag pose estimated with respect to the camera frame.
+* Check the video demonstration on YouTube: https://youtu.be/iuD8syhNoGU
 
-Check Wiki of repository for more details about the project: implementation, tutorial on building using Visual Studio and running demo on Unity. UnityPackage file is also available, which can be imported into any Unity Project (Assets -> Import Package -> Custom Package...)
+### Generic Model-Based Tracking in Unity using ViSP
+
+* The corresponding Unity scene is available in `unityProject/Assets/Scenes/scene_mbt.unity`.
+* The tracker initialization is performed using the AprilTag pose. When tracking fails, the tag is again used to initialize the tracker. Thus to start the demo or to recover from a tracking failure, the user has to present the face of the cube that has the tag toward the camera.
+* When selecting `Plane > Inspector` the user can modify camera parameters, cube size and tag size to make the demo working with its own material.
+* Check the video demonstration on YouTube: https://youtu.be/eLG9B7MHixU
+
+Check [wiki](https://github.com/lagadic/visp_unity/wiki) of repository for more details about this project usage: implementation, tutorial on building using Visual Studio and running demo on Unity.

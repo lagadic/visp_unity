@@ -2,8 +2,8 @@
 PresetManager.asset
 VFXManager.asset
 unityProject/Assets/ViSPUnity.*
-[Bb]uild
-[Bb]uilds
+*[Bb]uild
+*[Bb]uilds
 [Ll]ibrary
 [Tt]emp
 [Oo]bj
