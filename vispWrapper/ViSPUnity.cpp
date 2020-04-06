@@ -1,327 +1,392 @@
+/****************************************************************************
+ *
+ * ViSP, open source Visual Servoing Platform software.
+ * Copyright (C) 2005 - 2020 by Inria. All rights reserved.
+ *
+ * This software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * See the file LICENSE.txt at the root directory of this source
+ * distribution for additional information about the GNU GPL.
+ *
+ * For using ViSP with software that can not be combined with the GNU
+ * GPL, please contact Inria about acquiring a ViSP Professional
+ * Edition License.
+ *
+ * See http://visp.inria.fr for more information.
+ *
+ * This software was developed at:
+ * Inria Rennes - Bretagne Atlantique
+ * Campus Universitaire de Beaulieu
+ * 35042 Rennes Cedex
+ * France
+ *
+ * If you have questions regarding the use of this file, please contact
+ * Inria at visp@inria.fr
+ *
+ * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
+ * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * Description:
+ * Unity plugin that wraps some ViSP functionalities.
+ *
+ *****************************************************************************/
 #include "ViSPUnity.h"
+
+#include <visp3/gui/vpDisplayGDI.h>
+#include <visp3/gui/vpDisplayOpenCV.h>
+#include <visp3/gui/vpDisplayX.h>
+
+/*!
+  \file
+  \brief ViSPUnity plugin functions definition.
+ */
 
 extern "C" {
 
-	vpImage<unsigned char> I;
-	vpDetectorAprilTag detector(vpDetectorAprilTag::TAG_36h11);
-	vpHomogeneousMatrix cMo;
-	vpCameraParameters cam;
-	vpMbGenericTracker tracker;
+/*!
+ * Global variables for debug
+ */
+#if (VISP_CXX_STANDARD >= VISP_CXX_STANDARD_11)
+static vpDisplay *m_debug_display = nullptr; //!< Display associated to internal image m_I.
+#else
+static vpDisplay *m_debug_display = NULL; //!< Display associated to image m_I.
+#endif
+static bool m_debug_enable_display = false; //!< Flag used to enable/disable display associated to internal image m_I.
+static bool m_debug_display_is_initialized = false; //!< Flag used to know if display associated to internal image m_I is initialized.
 
-	vpArray2D<double> v, u, t;
-	double* theta = new double[3];
-	double* translation = new double[3];
-	double* h = new double[1];
-	double* w = new double[1];
-	double* apr = new double[6];
-	double tagSize = 0.053;
-	int* flag_state = new int[1];
+/*!
+ * Global variables that are common.
+ */
+static vpImage<unsigned char> m_I; //!< Internal image updated using Visp_ImageUchar_SetFromColor32Array().
+static vpCameraParameters m_cam; //!< Internal camera parameters updated using Visp_CameraParameters_Init().
 
-	typedef enum {
-		state_detection,
-		state_tracking,
-		state_quit
-	} state_t;
+/*!
+ * Global variables for vpDetectorAprilTag
+ */
+static vpDetectorAprilTag m_detector; //!< Internal AprilTag detector instance initialized using Visp_DetectorAprilTag_Init().
+static float m_detector_quad_decimate = 1.0; //!< Internal parameter associated to AprilTag detector instance modified using Visp_DetectorAprilTag_Init().
+static int m_detector_nthreads = 1; //!< Internal parameter associated to AprilTag detector instance modified using Visp_DetectorAprilTag_Init().
 
-	state_t state;
+/*!
+ * Global variables for vpMbGenericTracker
+ */
+typedef enum {
+  state_detection, //!< Tracker is in detection state until an AprilTag is detected. This state can also be reached when tracking fails.
+  state_tracking, //!< Tracker is in tracking state when AprilTag pose allows to initialize the tracker and when tracking succeed.
+} state_t;
 
-	int opt_device = 0;
-	vpDetectorAprilTag::vpAprilTagFamily opt_tag_family = vpDetectorAprilTag::TAG_36h11;
+static vpMbGenericTracker m_tracker; //!< Internal generic based-model tracker instance initialized using Visp_MbGenericTracker_Init().
+static double m_projection_error_threshold = 40.; //!< Internal parameter associated to generic based-model tracker instance and updated using Visp_MbGenericTracker_Init().
+static state_t m_state = state_detection; //!< Internal generic based-model tracker state updated during tracking using Visp_MbGenericTracker_Process().
 
-	double opt_tag_size = 0.08;
-	float opt_quad_decimate = 1.0;
-	int opt_nthreads = 1;
-	std::string opt_intrinsic_file = "";
-	std::string opt_camera_name = "cam1";
-	double opt_cube_size = 0.125; // 12.5cm by default: also sent from unity for creating cao file
-	double projection_error_threshold = 40.;
+void Visp_EnableDisplayForDebug(bool enable_display)
+{
+  m_debug_enable_display = enable_display;
+}
 
-	//Function called for detection only
-	state_t detectAprilTag(const vpImage<unsigned char> &I, vpDetectorAprilTag &detector,
-		double tagSize, const vpCameraParameters &cam, vpHomogeneousMatrix &cMo)
-	{
-		std::vector<vpHomogeneousMatrix> cMo_vec;
+void Visp_WrapperFreeMemory()
+{
+  if (m_debug_display) {
+    delete m_debug_display;
+    m_debug_enable_display = false;
+    m_debug_display_is_initialized = false;
+#if (VISP_CXX_STANDARD >= VISP_CXX_STANDARD_11)
+    m_debug_display = nullptr;
+#else
+    m_debug_display = NULL;
+#endif
+  }
+}
 
-		// Detection
-		bool ret = detector.detect(I, tagSize, cam, cMo_vec);
-		if (ret && detector.getNbObjects() > 0) { // if tag detected, we pick the first one
-			cMo = cMo_vec[0];
-			return state_tracking;
-		}
-		return state_detection;
-	}
+/*!
+ * Set vpImage from Unity Color32 array image.
+ * \param bitmap : Bitmap color 32 array that contains the color RGBA [height x width] image.
+ * \param height : Image height.
+ * \param width : Image width.
+ */
+void Visp_ImageUchar_SetFromColor32Array(unsigned char *bitmap, int height, int width)
+{
+  m_I.resize(static_cast<unsigned int>(height), static_cast<unsigned int>(width));
+  vpImageConvert::RGBaToGrey(bitmap, m_I.bitmap, static_cast<unsigned int>(width * height));
+  vpImageTools::flip(m_I);
 
+  if (m_debug_enable_display && ! m_debug_display_is_initialized) {
+#if defined(VISP_HAVE_X11)
+    m_debug_display = new vpDisplayX(m_I);
+    m_debug_display_is_initialized = true;
+#elif defined VISP_HAVE_GDI
+    m_debug_display = new vpDisplayGDI(m_I);
+    m_debug_display_is_initialized = true;
+#elif defined VISP_HAVE_OPENCV
+    m_debug_display = new vpDisplayOpenCV(m_I);
+    m_debug_display_is_initialized = true;
+#endif
+  }
+}
 
-	void InitMBT(double cam_px, double cam_py, double cam_u0, double cam_v0, int t) {
-		cam.initPersProjWithoutDistortion(cam_px, cam_py, cam_u0, cam_v0);
+void Visp_MbGenericTracker_SetFeatureType(int feature_type)
+{
+  if (feature_type == 0)
+    m_tracker.setTrackerType(vpMbGenericTracker::EDGE_TRACKER);
+#ifdef VISP_HAVE_OPENCV
+  else if (feature_type == 1)
+    m_tracker.setTrackerType(vpMbGenericTracker::EDGE_TRACKER | vpMbGenericTracker::KLT_TRACKER);
+#endif
+}
 
-		// Initialize AprilTag detector
-		//detector.set (opt_tag_family);
-		detector.setAprilTagQuadDecimate(opt_quad_decimate);
-		detector.setAprilTagNbThreads(opt_nthreads);
+void Visp_MbGenericTracker_SetMovingEdgesSettings(int range, double sample_step)
+{
+  vpMe me;
+  me.setMaskSize(5);
+  me.setMaskNumber(180);
+  me.setRange(static_cast<unsigned int>(range));
+  me.setThreshold(10000);
+  me.setMu1(0.5);
+  me.setMu2(0.5);
+  me.setSampleStep(sample_step);
+  m_tracker.setMovingEdge(me);
+}
 
-		// Prepare MBT
-		if (t == 0)
-			tracker.setTrackerType(vpMbGenericTracker::EDGE_TRACKER);
+void Visp_MbGenericTracker_SetKeypointSettings(double quality, int mask_border)
+{
+  if (m_tracker.getTrackerType() & vpMbGenericTracker::KLT_TRACKER) {
+    vpKltOpencv klt_settings;
+    klt_settings.setMaxFeatures(300);
+    klt_settings.setWindowSize(5);
+    klt_settings.setQuality(quality);
+    klt_settings.setMinDistance(8);
+    klt_settings.setHarrisFreeParameter(0.01);
+    klt_settings.setBlockSize(3);
+    klt_settings.setPyramidLevels(3);
+    m_tracker.setKltOpencv(klt_settings);
+    m_tracker.setKltMaskBorder(static_cast<unsigned int>(mask_border));
+  }
+}
 
-		if (t == 1)
-			tracker.setTrackerType(vpMbGenericTracker::EDGE_TRACKER | vpMbGenericTracker::KLT_TRACKER);
+void Visp_MbGenericTracker_Init(double angle_appear, double angle_disappear, double projection_error_threshold)
+{
+  m_projection_error_threshold = projection_error_threshold;
+  // camera calibration params
+  m_tracker.setCameraParameters(m_cam);
 
-		tracker.getCameraParameters(cam);
-		/*bool displayFullModel = false;*/
+  // model definition
+  m_tracker.loadModel("cube.cao");
+  m_tracker.setDisplayFeatures(m_debug_enable_display);
+  m_tracker.setAngleAppear(vpMath::rad(angle_appear));
+  m_tracker.setAngleDisappear(vpMath::rad(angle_disappear));
+  m_tracker.setProjectionErrorComputation(true);
 
-		// edges
-		vpMe me;
-		me.setMaskSize(5);
-		me.setMaskNumber(180);
-		me.setRange(12);
-		me.setThreshold(10000);
-		me.setMu1(0.5);
-		me.setMu2(0.5);
-		me.setSampleStep(4);
-		tracker.setMovingEdge(me);
+  m_state = state_detection;
+}
 
-		if (t == 1) {
-			//textures
-			vpKltOpencv klt_settings;
-			if (t == 1) {
-				klt_settings.setMaxFeatures(300);
-				klt_settings.setWindowSize(5);
-				klt_settings.setQuality(0.015);
-				klt_settings.setMinDistance(8);
-				klt_settings.setHarrisFreeParameter(0.01);
-				klt_settings.setBlockSize(3);
-				klt_settings.setPyramidLevels(3);
-				tracker.setKltOpencv(klt_settings);
-				tracker.setKltMaskBorder(5);
-			}
-		}
-		// camera calibration params
-		tracker.setCameraParameters(cam);
+bool Visp_MbGenericTracker_Process(double tag_size,
+                                  float *visible_edges_pointx, float *visible_edges_pointy, int *visible_edges_number,
+                                  float *cube_cMo, double *tracking_time)
+{
+  double t_start = vpTime::measureTimeMs();
 
-		// model definition
-		tracker.loadModel("cube.cao");
-		tracker.setDisplayFeatures(true);
-		tracker.setAngleAppear(vpMath::rad(70));
-		tracker.setAngleDisappear(vpMath::rad(80));
+  vpHomogeneousMatrix cMo;
 
-		state = state_detection;
-	}
+  // If the image contains an aprilTag we pick the first one
+  unsigned int tag_id = 0;
 
-	void AprilTagMBT(unsigned char* const bitmap, int height, int width, 
-		double* pointx, double* pointy, 
-		double* kltX, double* kltY, int* kltNumber, 
-		int t, int e, int* flag_state, int *nEdges) {
+  if (m_debug_enable_display && m_debug_display_is_initialized) {
+    vpDisplay::display(m_I);
+  }
 
-		//The following loop flips the bitmap
-		for (int r = 0; r < height; r++) {
-			for (int c = 0; c < width / 2; c++) {
-				unsigned char temp = bitmap[r*width + c];
-				bitmap[r*width + c] = bitmap[r*width + width - c - 1];
-				bitmap[r*width + width - c - 1] = temp;
-			}
-		}
-		I.resize(height, width);
-		I.bitmap = bitmap;
+  if (m_state == state_detection) {
+    std::vector<vpHomogeneousMatrix> cMo_vec;
 
-		if (state == state_detection) {
-			state = detectAprilTag(I, detector, opt_tag_size, cam, cMo);
-			*flag_state = 0;
+    // Detection
+    bool tag_detected = m_detector.detect(m_I, tag_size, m_cam, cMo_vec);
+    if (tag_detected && m_detector.getNbObjects() > 0) { // if tag detected, we pick the first one
+      cMo = cMo_vec[tag_id];
+      m_state = state_tracking;
+    }
 
-			// Initialize the tracker with the result of the detection
-			if (state == state_tracking) {
-				tracker.initFromPose(I, cMo);
-				*flag_state = 1;
-			}
-		}
+    // Initialize the tracker with the result of the detection
+    if (m_state == state_tracking) {
+      m_tracker.initFromPose(m_I, cMo);
+    }
+  }
 
-		if (state == state_tracking) {
-			//state = track(I, tracker, opt_projection_error_threshold, opt_camera_name, cMo);
-			try {
-				tracker.track(I);
+  if (m_state == state_tracking) {
+    try {
+      m_tracker.track(m_I);
 
-				// get the lines currently tracked of the model
-				std::list<vpMbtDistanceLine *> edges;
-				tracker.getLline("Camera", edges, 0);
-				int i = 0;
-				*flag_state = 1;
-				//*nEdges = edges.size();
-				*nEdges = 0; // counter of the number of edges actually visible and currently tracked
-				for (std::list<vpMbtDistanceLine *>::const_iterator it = edges.begin(); it != edges.end(); ++it) {
+      m_tracker.getPose(cMo);
 
-					// Part of the functionality from the display() function is implemented from the following source:
-					// http://visp-doc.inria.fr/doxygen/visp-daily/vpMbtDistanceLine_8cpp_source.html
-					
-					if (e == 0) {
-						if (!(*it)->isvisible || !(*it)->isTracked()) // no difference with isTracked() 
-							continue;
-					}
-					*nEdges += 1; // increment count of number of edges that are visible and being tracked with visibility
-					vpPoint *P1 = (*it)->p1;
-					vpPoint *P2 = (*it)->p2;
-					P1->changeFrame(cMo);
-					P2->changeFrame(cMo);
-					P1->project();
-					P2->project();
-					vpImagePoint IP1, IP2;
-					vpMeterPixelConversion::convertPoint(cam, P1->get_x(), P1->get_y(), IP1);
-					vpMeterPixelConversion::convertPoint(cam, P2->get_x(), P2->get_y(), IP2);
-					pointx[i] = IP1.get_u();
-					pointy[i] = IP1.get_v();
-					i++;
-					pointx[i] = IP2.get_u();
-					pointy[i] = IP2.get_v();
-					i++;
-				}
+      int visible_edges_counter = 0; // counter of the number of edges actually visible and currently tracked
 
-				// GETTING THE KLT POINTS/FEATURES
-				//  getkltimagepoints: Get the current list of KLT points for the reference camera.
-				//	This function convert and copy the OpenCV KLT points into vpImagePoints.
+      // Get the lines currently tracked of the model
+      std::list<vpMbtDistanceLine *> edges;
+      m_tracker.getLline("Camera", edges, 0);
+      int i = 0;
 
-				if (t == 1) {
-					std::vector<vpImagePoint> kltPoints = tracker.getKltImagePoints();
-					for (int i = 0; i < kltPoints.size(); i++) {
-						kltX[i] = kltPoints[i].get_u();
-						kltY[i] = kltPoints[i].get_v();
-					}
+      //*nEdges = edges.size();
+      for (std::list<vpMbtDistanceLine *>::const_iterator it = edges.begin(); it != edges.end(); ++it) {
 
-					//kltNumber = kltPoints.size();
-					*kltNumber = tracker.getKltNbPoints();
-				}
+        // Part of the functionality from the display() function is implemented from the following source:
+        // http://visp-doc.inria.fr/doxygen/visp-daily/vpMbtDistanceLine_8cpp_source.html
+        if ((*it)->isvisible && (*it)->isTracked()) {
+          visible_edges_counter ++; // increment count of number of edges that are visible and being tracked with visibility
+          vpPoint *P1 = (*it)->p1;
+          vpPoint *P2 = (*it)->p2;
+          P1->project(cMo);
+          P2->project(cMo);
+          vpImagePoint iP1, iP2;
+          vpMeterPixelConversion::convertPoint(m_cam, P1->get_x(), P1->get_y(), iP1);
+          vpMeterPixelConversion::convertPoint(m_cam, P2->get_x(), P2->get_y(), iP2);
+          visible_edges_pointx[i] = static_cast<float>(iP1.get_u());
+          visible_edges_pointy[i] = static_cast<float>(iP1.get_v());
+          i ++;
+          visible_edges_pointx[i] = static_cast<float>(iP2.get_u());
+          visible_edges_pointy[i] = static_cast<float>(iP2.get_v());
+          i ++;
+        }
+      }
 
-				tracker.getPose(cMo);
+      // Update number of visible edges
+      *visible_edges_number = visible_edges_counter;
 
-				// Detect tracking error
-				double projection_error = tracker.computeCurrentProjectionError(I, cMo, cam);
-				if (projection_error > projection_error_threshold) {
-					state = state_detection;
-				}
-				else {
-					state = state_tracking;
-				}
-			}
-			catch (...) {
-				state = state_detection;
-			}
-		}
-	}
+      if (m_debug_enable_display && m_debug_display_is_initialized) {
+        m_tracker.display(m_I, cMo, m_cam, vpColor::red, 2);
+        vpDisplay::displayFrame(m_I, cMo, m_cam, tag_size / 2, vpColor::none, 3);
+      }
 
-	// Creates a cube.cao file in your current directory (in unityProject folder)
-	// cubeEdgeSize : size of cube edges in meters 
-	void createCaoFile(double cubeEdgeSize)
-	{
-		std::ofstream fileStream;
-		fileStream.open("cube.cao", std::ofstream::out | std::ofstream::trunc);
-		fileStream << "V1\n";
-		fileStream << "# 3D Points\n";
-		fileStream << "8                  # Number of points\n";
-		fileStream << cubeEdgeSize / 2 << " " << cubeEdgeSize / 2 << " " << 0 << "    # Point 0: (X, Y, Z)\n";
-		fileStream << cubeEdgeSize / 2 << " " << -cubeEdgeSize / 2 << " " << 0 << "    # Point 1\n";
-		fileStream << -cubeEdgeSize / 2 << " " << -cubeEdgeSize / 2 << " " << 0 << "    # Point 2\n";
-		fileStream << -cubeEdgeSize / 2 << " " << cubeEdgeSize / 2 << " " << 0 << "    # Point 3\n";
-		fileStream << -cubeEdgeSize / 2 << " " << cubeEdgeSize / 2 << " " << -cubeEdgeSize << "    # Point 4\n";
-		fileStream << -cubeEdgeSize / 2 << " " << -cubeEdgeSize / 2 << " " << -cubeEdgeSize << "    # Point 5\n";
-		fileStream << cubeEdgeSize / 2 << " " << -cubeEdgeSize / 2 << " " << -cubeEdgeSize << "    # Point 6\n";
-		fileStream << cubeEdgeSize / 2 << " " << cubeEdgeSize / 2 << " " << -cubeEdgeSize << "    # Point 7\n";
-		fileStream << "# 3D Lines\n";
-		fileStream << "0                  # Number of lines\n";
-		fileStream << "# Faces from 3D lines\n";
-		fileStream << "0                  # Number of faces\n";
-		fileStream << "# Faces from 3D points\n";
-		fileStream << "6                  # Number of faces\n";
-		fileStream << "4 0 3 2 1          # Face 0: [number of points] [index of the 3D points]...\n";
-		fileStream << "4 1 2 5 6\n";
-		fileStream << "4 4 7 6 5\n";
-		fileStream << "4 0 7 4 3\n";
-		fileStream << "4 5 2 3 4\n";
-		fileStream << "4 0 1 6 7          # Face 5\n";
-		fileStream << "# 3D cylinders\n";
-		fileStream << "0                  # Number of cylinders\n";
-		fileStream << "# 3D circles\n";
-		fileStream << "0                  # Number of circles\n";
-		fileStream.close();
-	}
+      // Detect tracking error
+      double projection_error = m_tracker.computeCurrentProjectionError(m_I, cMo, m_cam);
+      if (m_debug_enable_display && m_debug_display_is_initialized) {
+        std::stringstream ss;
+        ss << "Projection error: " << projection_error << std::endl;
+        vpDisplay::displayText(m_I, 40, 20, ss.str(), vpColor::red);
+      }
+      if (projection_error > m_projection_error_threshold) {
+        m_state = state_detection;
+      }
+      else {
+        m_state = state_tracking;
+      }
+    }
+    catch (...) {
+      m_state = state_detection;
+    }
+  }
 
-	void AprilTagFunctionsCombined(unsigned char* const bitmap, int height, int width, 
-		double cam_px, double cam_py, double cam_u0, double cam_v0, 
-		double* array, double* arrayU, double* arrayV, double *arrayT, 
-		double* h, double* w, double* apr) {
+  // Update output pose array
+  for (unsigned int i = 0; i < 16; i++) {
+    cube_cMo[i] = static_cast<float>(cMo.data[i]);
+  }
+  *tracking_time = vpTime::measureTimeMs() - t_start;
 
-		cam.initPersProjWithoutDistortion(cam_px, cam_py, cam_u0, cam_v0);
-		//The following loop flips the bitmap
-		for (int r = 0; r < height; r++) {
-			for (int c = 0; c < width / 2; c++) {
-				unsigned char temp = bitmap[r*width + c];
-				bitmap[r*width + c] = bitmap[r*width + width - c - 1];
-				bitmap[r*width + width - c - 1] = temp;
-			}
-		}
-		I.resize(height, width);
-		I.bitmap = bitmap;
+  if (m_debug_enable_display && m_debug_display_is_initialized) {
+    std::stringstream ss;
+    ss << "Loop time: " << *tracking_time << std::endl;
+    vpDisplay::displayText(m_I, 20, 20, ss.str(), vpColor::red);
+    vpDisplay::flush(m_I);
+  }
 
-		// Detection
-		std::vector<vpHomogeneousMatrix> cMo_v;
-		bool check = detector.detect(I, tagSize, cam, cMo_v);
-		////if (check && detector.getNbObjects() > 0) { // if tag detected, we pick the first one
+  return (m_state == state_tracking ? true : false);
+}
 
-		//if (check) { // if tag detected, we pick the first one
-		//	cMo = cMo_v[0];
-		//}
+void Visp_MbGenericTracker_CreateCaoFile(double cube_edge_size)
+{
+  std::ofstream fileStream;
+  fileStream.open("cube.cao", std::ofstream::out | std::ofstream::trunc);
+  fileStream << "V1\n";
+  fileStream << "# 3D Points\n";
+  fileStream << "8                  # Number of points\n";
+  fileStream <<  cube_edge_size / 2 << " " <<  cube_edge_size / 2 << " " << 0 << "    # Point 0: (X, Y, Z)\n";
+  fileStream <<  cube_edge_size / 2 << " " << -cube_edge_size / 2 << " " << 0 << "    # Point 1\n";
+  fileStream << -cube_edge_size / 2 << " " << -cube_edge_size / 2 << " " << 0 << "    # Point 2\n";
+  fileStream << -cube_edge_size / 2 << " " <<  cube_edge_size / 2 << " " << 0 << "    # Point 3\n";
+  fileStream << -cube_edge_size / 2 << " " <<  cube_edge_size / 2 << " " << -cube_edge_size << "    # Point 4\n";
+  fileStream << -cube_edge_size / 2 << " " << -cube_edge_size / 2 << " " << -cube_edge_size << "    # Point 5\n";
+  fileStream <<  cube_edge_size / 2 << " " << -cube_edge_size / 2 << " " << -cube_edge_size << "    # Point 6\n";
+  fileStream <<  cube_edge_size / 2 << " " <<  cube_edge_size / 2 << " " << -cube_edge_size << "    # Point 7\n";
+  fileStream << "# 3D Lines\n";
+  fileStream << "0                  # Number of lines\n";
+  fileStream << "# Faces from 3D lines\n";
+  fileStream << "0                  # Number of faces\n";
+  fileStream << "# Faces from 3D points\n";
+  fileStream << "6                  # Number of faces\n";
+  fileStream << "4 0 3 2 1          # Face 0: [number of points] [index of the 3D points]...\n";
+  fileStream << "4 1 2 5 6\n";
+  fileStream << "4 4 7 6 5\n";
+  fileStream << "4 0 7 4 3\n";
+  fileStream << "4 5 2 3 4\n";
+  fileStream << "4 0 1 6 7          # Face 5\n";
+  fileStream << "# 3D cylinders\n";
+  fileStream << "0                  # Number of cylinders\n";
+  fileStream << "# 3D circles\n";
+  fileStream << "0                  # Number of circles\n";
+  fileStream.close();
+}
 
-		//If the image contains aprilTag
-		if (check) {
+void Visp_CameraParameters_Init(double cam_px, double cam_py, double cam_u0, double cam_v0)
+{
+  m_cam.initPersProjWithoutDistortion(cam_px, cam_py, cam_u0, cam_v0);
+}
 
-			//COORDINATES OF APRILTAG
-			vpRect bbox = detector.getBBox(0);
-			double* coord = new double[4];
-			vpImagePoint X = bbox.getCenter();
-			coord[0] = X.get_i();
-			coord[1] = X.get_j();
-			coord[2] = X.get_u();
-			coord[3] = X.get_v();
-			for (size_t i = 0; i < 3; i++)
-			{
-				array[i] = coord[i];
-			}
+void Visp_DetectorAprilTag_Init(float quad_decimate, int nthreads)
+{
+  // Initialize AprilTag detector
+  m_detector_quad_decimate = quad_decimate;
+  m_detector_nthreads = nthreads;
+  m_detector.setAprilTagFamily(vpDetectorAprilTag::TAG_36h11);
+  m_detector.setAprilTagQuadDecimate(m_detector_quad_decimate);
+  m_detector.setAprilTagNbThreads(m_detector_nthreads);
+  m_detector.setDisplayTag(m_debug_enable_display, vpColor::none, 3);
+}
 
-			//SIZE OF BOUNDING-BOX
-			//vpRect bbox = detector.getBBox(0);
-			h[0] = bbox.getHeight();
-			w[0] = bbox.getWidth();
+bool Visp_DetectorAprilTag_Process(double tag_size, float *tag_cog, float *tag_length, float *tag_cMo, double *detection_time)
+{
+  double t_start = vpTime::measureTimeMs();
 
-			//SIZE OF POLYGON
-			vpPolygon polygon(detector.getPolygon(0));
+  if (m_debug_enable_display && m_debug_display_is_initialized) {
+    vpDisplay::display(m_I);
+  }
+  // Detection
+  std::vector<vpHomogeneousMatrix> cMo_v;
+  bool tag_detected = m_detector.detect(m_I, tag_size, m_cam, cMo_v);
 
-			vector <vpImagePoint> corners = polygon.getCorners();
-			apr[0] = vpImagePoint::distance(corners[0], corners[1]); // side1
-			apr[1] = vpImagePoint::distance(corners[1], corners[2]); // side2
-			apr[2] = vpImagePoint::distance(corners[2], corners[3]); // side3
-			apr[3] = vpImagePoint::distance(corners[3], corners[0]); // side4
-			apr[4] = vpImagePoint::distance(corners[0], corners[2]); // diagonal1
-			apr[5] = vpImagePoint::distance(corners[1], corners[3]); // diagonal2
+  if (tag_detected) {
+    // If the image contains an aprilTag we pick the first one
+    unsigned int tag_id = 0;
+    // Tag characteristics
+    vpImagePoint cog = m_detector.getCog(tag_id);
+    tag_cog[0] = static_cast<float>(cog.get_u());
+    tag_cog[1] = static_cast<float>(cog.get_v());
 
-			//ROTATION OF APRILTAG
-			u = cMo_v[0].getCol(0);
-			v = cMo_v[0].getCol(1);
-			t = cMo_v[0].getCol(3);
+    std::vector <vpImagePoint> corners = m_detector.getPolygon(tag_id);
+    tag_length[0] = static_cast<float>(vpImagePoint::distance(corners[0], corners[1])); // side1
+    tag_length[1] = static_cast<float>(vpImagePoint::distance(corners[1], corners[2])); // side2
+    tag_length[2] = static_cast<float>(vpImagePoint::distance(corners[2], corners[3])); // side3
+    tag_length[3] = static_cast<float>(vpImagePoint::distance(corners[3], corners[0])); // side4
+    tag_length[4] = static_cast<float>(vpImagePoint::distance(corners[0], corners[2])); // diagonal1
+    tag_length[5] = static_cast<float>(vpImagePoint::distance(corners[1], corners[3])); // diagonal2
 
-			for (size_t i = 0; i < u.size(); i++)
-			{
-				arrayU[i] = u.data[i];
-				arrayV[i] = v.data[i];
-				arrayT[i] = t.data[i];
-			}
-		}
+    // Update output pose array
+    for (unsigned int i = 0; i < 16; i++) {
+      tag_cMo[i] = static_cast<float>(cMo_v[tag_id].data[i]);
+    }
 
-		else {
-			array = 0;
+    if (m_debug_enable_display && m_debug_display_is_initialized) {
+      vpDisplay::displayFrame(m_I, cMo_v[tag_id], m_cam, tag_size / 2, vpColor::none, 3);
+    }
+  }
 
-			h[0] = -1;
-			w[0] = -1;
+  *detection_time = vpTime::measureTimeMs() - t_start;
 
-			arrayU = 0;
-			arrayV = 0;
-			arrayT = 0;
-		}
-	}
+  if (m_debug_enable_display && m_debug_display_is_initialized) {
+    std::stringstream ss;
+    ss << "Loop time: " << *detection_time << std::endl;
+    vpDisplay::displayText(m_I, 20, 20, ss.str(), vpColor::red);
+    vpDisplay::flush(m_I);
+  }
+
+  return tag_detected;
+}
 }
