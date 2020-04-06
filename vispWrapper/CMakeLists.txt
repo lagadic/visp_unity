@@ -66,6 +66,8 @@ if(APPLE)
   set_target_properties(ViSPUnity PROPERTIES BUNDLE TRUE)
   set_target_properties(ViSPUnity PROPERTIES PREFIX "")
   set_target_properties(ViSPUnity PROPERTIES SUFFIX ".bundle")
+elseif(UNIX)
+  set_target_properties(ViSPUnity PROPERTIES PREFIX "")
 endif()
 
 # ----------------------------------------------------------------------------
