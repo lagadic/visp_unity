@@ -51,7 +51,7 @@
 #include <fstream>
 #include <ios>
 
-#  ifdef VISPUnity_EXPORTS
+#  ifdef ViSPUnity_EXPORTS
 #    define VISP_UNITY_EXPORT VISP_DLLEXPORT
 #  else
 #    define VISP_UNITY_EXPORT VISP_DLLIMPORT
